@@ -160,7 +160,7 @@ def main() -> None:
     # Load config or exit
     try:
         config.load_configuration()
-    except Exception as e:
+    except (FileNotFoundError, ValueError) as e:
         sys.exit(e)
 
     # General parser
@@ -169,7 +169,7 @@ def main() -> None:
 
     # Tests
     if not Path(args.destination).is_dir():
-        print(f"FEJL. Destinationen skal være en mappe.", flush=True)
+        print("FEJL. Destinationen skal være en mappe.", flush=True)
 
     out_dir = Path(args.destination, args.uuid)
     # if out_dir.exists():

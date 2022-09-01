@@ -14,7 +14,10 @@ CONFIG_KEYS = [
 
 
 def load_configuration() -> None:
-    """Loads all CONFIG_KEYS from config.json into the environment"""
+    """Loads all CONFIG_KEYS if found in {Home}/.smartarkivering/config.json
+    into envvars
+    """
+
     if not CONFIG_FILE.is_file():
         raise FileNotFoundError("Konfigurationsfilen blev ikke fundet.")
 
