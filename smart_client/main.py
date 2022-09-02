@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 import urllib.parse
-import importlib.metadata
+# import importlib.metadata
 
 import httpx
 from gooey import Gooey, GooeyParser
@@ -16,7 +16,9 @@ import smart_client.config as config
 
 # Setup
 IGNORE_FIELDS: list = ["files", "terms_of_service"]
-__version__ = importlib.metadata.version("smart-client")
+# TODO. Does not work currently
+# __version__ = importlib.metadata.version("smart_client")
+
 
 utf8_stdout = codecs.getwriter("utf-8")(sys.stdout.buffer, "strict")
 utf8_stderr = codecs.getwriter("utf-8")(sys.stderr.buffer, "strict")
@@ -38,7 +40,11 @@ def setup_parser(cli: Any) -> Any:
         metavar="Destination",
         help=(
             "Sti til rodmappen, hvor filer og metadata skal kopieres (mappen behøver ikke"
-            " eksistere i forvejen)"
+            " eksistere i forvejen).\n\n"
+            "Hver aflevering, inkl. filer, bliver placeret i en undermappe til rodmappen,"
+            " navngivet efter afleveringens uuid.\n\n"
+            "Hvis uuid-mappen, afleveringsformularen eller en fil eksisterer i forvejen,"
+            " vil de ikke blive overskrevet."
         ),
         widget="DirChooser",
         type=Path,
@@ -161,7 +167,8 @@ def download_files(submission: dict, out_dir: Path) -> None:
 
 
 @Gooey(
-    program_name=f"Smartarkivering, version {__version__}",
+    # program_name=f"Smartarkivering, version {__version__}",
+    program_name="Smartarkivering",
     program_description="Klient til at hente afleveringer og filer fra smartarkivering.dk",
     default_size=(600, 700),
     show_restart_button=False,
