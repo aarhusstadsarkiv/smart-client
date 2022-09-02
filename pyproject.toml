@@ -1,13 +1,14 @@
 [tool.poetry]
 name = "smart-client"
-version = "0.1.0"
+version = "0.1.1"
 description = "Klient til Smartarkivering.dk-submissions"
 authors = ["Claus Juhl Knudsen <cjk@aarhus.dk>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.9,<3.11"
 Gooey = "^1.0.8"
 httpx = "^0.23.0"
+pyinstaller = "^5.3"
 
 [tool.poetry.scripts]
 smart = "smart_client.main:main"

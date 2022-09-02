@@ -5,17 +5,18 @@ import os
 import json
 from pathlib import Path
 from typing import Any
-from urllib.request import urlopen
+import urllib.parse
+import importlib.metadata
 
 import httpx
 from gooey import Gooey, GooeyParser
 
 import smart_client.config as config
 
-# -----------------------------------------------------------------------------
+
 # Setup
-# -----------------------------------------------------------------------------
-__version__ = "0.1.0"
+IGNORE_FIELDS: list = ["files", "terms_of_service"]
+__version__ = importlib.metadata.version("smart-client")
 
 utf8_stdout = codecs.getwriter("utf-8")(sys.stdout.buffer, "strict")
 utf8_stderr = codecs.getwriter("utf-8")(sys.stderr.buffer, "strict")
@@ -61,13 +62,13 @@ def get_submission(uuid: str, out_dir: Path) -> dict:
     """Fetch and save submission-data
 
     Given a uuid and an out_dir, it tries to fetch the submission-data from
-    the API. If fetched, it is then saved to a json-file and returned as a
+    the API. If fetched, it is then saved to a json-file and returns it as a
     dict.
 
     Args:
-        uuid (UUID): uuid of the submission. Has to be copied from the mail-notification
-        out_dir (Path): full path to the folder where the submission.json is saved. Usually
-            the folder is named after the uuid
+        uuid (UUID): uuid of the submission. Copy from the mail-notification
+        out_dir (Path): full path to the folder where the submission.json is
+            to be saved. Usually the folder is named after the uuid.
 
     Returns:
         A dict-representation of the submission-data returned by the api-endpoint. Currently
@@ -78,6 +79,7 @@ def get_submission(uuid: str, out_dir: Path) -> dict:
     """
 
     with httpx.Client() as client:
+        print("Henter afleveringsformular", flush=True)
         r = client.get(
             f"{os.getenv('SUBMISSION_URL')}/{uuid}?api-key={os.getenv('API_KEY')}"
         )
@@ -91,8 +93,21 @@ def get_submission(uuid: str, out_dir: Path) -> dict:
             )
 
         submission: dict = r.json()
-        with open(Path(out_dir, "submission.json"), "w", encoding="utf-8") as f:
-            json.dump(submission, f, ensure_ascii=False, indent=4)
+        stripped_sub: dict = {
+            k: v
+            for k, v in submission["data"].items()
+            if v and (k not in IGNORE_FIELDS)
+        }
+        filepath = Path(out_dir, "submission.json")
+        if filepath.exists():
+            print(
+                "ADVARSEL. En formular med samme uuid ligger allerede i mappen. Overskriver ikke.",
+                flush=True,
+            )
+            return submission
+
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(stripped_sub, f, ensure_ascii=False, indent=4)
         return submission
 
 
@@ -110,47 +125,44 @@ def download_files(submission: dict, out_dir: Path) -> None:
         HTTPException: All non-200 status_codes are raised
     """
 
-    # get file_ids from the "file_chooser" ()
-    file_ids: list = submission["data"].get("file_chooser", [])
-    if not file_ids:
+    # get file_urls from the submission-data
+    files_dict: dict = submission["data"]["linked"].get("files")
+    files: list[dict] = [v for k, v in files_dict.items()]
+    if not files:
         raise ValueError("FEJL. Afleveringen indeholder ingen filer.")
 
     with httpx.Client() as client:
-        for file_id in file_ids:
-            # get file-metadata
-            url: str = (
-                f"{os.getenv('FILEDATA_URL')}/{file_id}?api-key={os.getenv('API_KEY')}"
+        files_len: int = len(files_dict)
+        print(f"Henter {files_len} fil(er):", flush=True)
+        for idx, d in enumerate(files, start=1):
+            filename = urllib.parse.unquote(Path(d.get("url")).name)
+            print(
+                f"{idx} af {files_len}: {filename} ({d.get('size')} bytes)...",
+                flush=True,
             )
-            print(f"Henter metadata om fil_id {file_id}: {url}", flush=True)
-            r = client.get(url)
+            r = client.get(d.get("url"), params={"api-key": os.getenv("API_KEY")})
             if r.status_code == 404:
                 raise HTTPException(
-                    f"FEJl. Der findes ikke en fil på serveren med dette fil_id: {file_id}"
+                    f"FEJl. Afleveringen har ikke nogen vedhæftet fil med dette navn: {filename}"
                 )
             elif r.status_code != 200:
                 raise HTTPException(
-                    f"FEJl. Der Kunne ikke hentes en fil på serveren med dette fil_id: {file_id}"
+                    f"FEJl. Der Kunne ikke hentes en fil på serveren med dette navn: {filename}"
                 )
-            metadata = r.json
-            filename: str = metadata["filename"].get("value")
-            url = f"{os.getenv('BLOB_URL')}//{metadata}?api-key={os.getenv('API_KEY')}"
-            print(f"Henter fil: {url}", flush=True)
-            # fetch blob
-            with urlopen(url) as blob:
-                content = blob.read()
-            # save blob
-            file_path: Path = out_dir / filename
-            with open(file_path, "wb") as download:
-                download.write(content)
-
-            # f = client.get(url)
-            # with open(file_path, "wb") as download:
-            #     download.write(f.content)
+            filepath = Path(out_dir, filename)
+            if filepath.exists():
+                print(
+                    "ADVARSEL. En fil med samme navn ligger allerede i mappen. Overskriver ikke.",
+                    flush=True,
+                )
+                continue
+            with open(filepath, "wb") as download:
+                download.write(r.content)
 
 
 @Gooey(
     program_name=f"Smartarkivering, version {__version__}",
-    program_description="Klient til at hente afleveringer fra smartarkivering.dk",
+    program_description="Klient til at hente afleveringer og filer fra smartarkivering.dk",
     default_size=(600, 700),
     show_restart_button=False,
     show_failure_modal=False,
@@ -189,6 +201,8 @@ def main() -> None:
         download_files(submission, out_dir)
     except (HTTPException, ValueError) as e:
         sys.exit(e)
+
+    print("Færdig.\n", flush=True)
 
 
 if __name__ == "__main__":
