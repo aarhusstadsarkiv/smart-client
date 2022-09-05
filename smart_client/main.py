@@ -1,15 +1,11 @@
-import codecs
 from http.client import HTTPException
 import sys
 import os
-import io
 import locale
 import json
 from pathlib import Path
 from typing import Any
 import urllib.parse
-
-# import importlib.metadata
 
 import httpx
 from gooey import Gooey, GooeyParser
@@ -19,20 +15,23 @@ import smart_client.config as config
 
 # Setup
 IGNORE_FIELDS: list = ["files", "terms_of_service"]
-# TODO. Does not work currently
-# __version__ = importlib.metadata.version("smart_client")
+version: str = "ukendt version"
+with open(Path(__file__).parent.parent / "pyproject.toml") as f:
+    for line in f:
+        if line.startswith("version"):
+            version = line.split()[-1].replace('"', "")  # remove quotes
 
 
 def setup_parser(cli: Any) -> Any:
     cli.add_argument(
         "uuid",
-        metavar="Afleveringens uuid",
+        metavar="uuid",
         help=("Unik id for afleveringen. Eks.: dbd9bcb8-8110-4a10-9fe7-d12d9ca9f09d"),
         gooey_options={"full_width": True},
     )
     cli.add_argument(
         "destination",
-        metavar="Destination",
+        metavar="destination",
         help=(
             "Sti til rodmappen, hvor filer og metadata skal kopieres (mappen behøver ikke"
             " eksistere i forvejen).\n\n"
@@ -157,13 +156,13 @@ def download_files(submission: dict, out_dir: Path) -> None:
 
 
 @Gooey(
-    # program_name=f"Smartarkivering, version {__version__}",
-    program_name="Smartarkivering",
+    program_name=f"Smartarkivering, version {version}",
+    # program_name="Smartarkivering",
     program_description="Klient til at hente afleveringer og filer fra smartarkivering.dk",
     default_size=(600, 700),
     # https://github.com/chriskiehl/Gooey/issues/520#issuecomment-576155188
     # necessary for pyinstaller to work in --windowed mode (no console)
-    encoding = locale.getpreferredencoding(),
+    encoding=locale.getpreferredencoding(),
     show_restart_button=False,
     show_failure_modal=False,
     show_success_modal=False,
