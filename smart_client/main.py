@@ -2,10 +2,13 @@ import codecs
 from http.client import HTTPException
 import sys
 import os
+import io
+import locale
 import json
 from pathlib import Path
 from typing import Any
 import urllib.parse
+
 # import importlib.metadata
 
 import httpx
@@ -18,14 +21,6 @@ import smart_client.config as config
 IGNORE_FIELDS: list = ["files", "terms_of_service"]
 # TODO. Does not work currently
 # __version__ = importlib.metadata.version("smart_client")
-
-
-utf8_stdout = codecs.getwriter("utf-8")(sys.stdout.buffer, "strict")
-utf8_stderr = codecs.getwriter("utf-8")(sys.stderr.buffer, "strict")
-if sys.stdout.encoding != "UTF-8":
-    sys.stdout = utf8_stdout  # type: ignore
-if sys.stderr.encoding != "UTF-8":
-    sys.stderr = utf8_stderr  # type: ignore
 
 
 def setup_parser(cli: Any) -> Any:
@@ -53,12 +48,6 @@ def setup_parser(cli: Any) -> Any:
             "full_width": True,
         },
     )
-    # cli.add_argument(
-    #     "--delete",
-    #     metavar="Slet oprindelige filer",
-    #     action="store_true",
-    #     help="Slet filerne fra deres oprindelige placering efter kopiering",
-    # )
 
     args = cli.parse_args()
     return args
@@ -85,7 +74,7 @@ def get_submission(uuid: str, out_dir: Path) -> dict:
     """
 
     with httpx.Client() as client:
-        print("Henter afleveringsformular", flush=True)
+        print(f"Henter afleveringsformular med uuid: {uuid}", flush=True)
         r = client.get(
             f"{os.getenv('SUBMISSION_URL')}/{uuid}?api-key={os.getenv('API_KEY')}"
         )
@@ -107,7 +96,8 @@ def get_submission(uuid: str, out_dir: Path) -> dict:
         filepath = Path(out_dir, "submission.json")
         if filepath.exists():
             print(
-                "ADVARSEL. En formular med samme uuid ligger allerede i mappen. Overskriver ikke.",
+                "ADVARSEL. En metadatafil (submission.json) fra samme uuid"
+                " ligger allerede i mappen. Overskriver ikke.",
                 flush=True,
             )
             return submission
@@ -171,6 +161,9 @@ def download_files(submission: dict, out_dir: Path) -> None:
     program_name="Smartarkivering",
     program_description="Klient til at hente afleveringer og filer fra smartarkivering.dk",
     default_size=(600, 700),
+    # https://github.com/chriskiehl/Gooey/issues/520#issuecomment-576155188
+    # necessary for pyinstaller to work in --windowed mode (no console)
+    encoding = locale.getpreferredencoding(),
     show_restart_button=False,
     show_failure_modal=False,
     show_success_modal=False,
@@ -191,8 +184,6 @@ def main() -> None:
         print("FEJL. Destinationen skal være en mappe.", flush=True)
 
     out_dir = Path(args.destination, args.uuid)
-    # if out_dir.exists():
-    #     print(f"ADVARSEL. Destinationsmappen eksisterer allerede. Slet den inden ")
     try:
         out_dir.mkdir(parents=True, exist_ok=True)
     except Exception as e:

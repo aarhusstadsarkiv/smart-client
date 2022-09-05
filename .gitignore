@@ -2,7 +2,8 @@
 .env
 __pycache__
 .vscode
-.pyc
+*.pyc
 .mypy_cache
 dist/
 build/
+*.spec
