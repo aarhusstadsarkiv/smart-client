@@ -15,11 +15,11 @@ import smart_client.config as config
 
 # Setup
 IGNORE_FIELDS: list = ["files", "terms_of_service"]
-version: str = "ukendt version"
-with open(Path(__file__).parent.parent / "pyproject.toml") as f:
-    for line in f:
-        if line.startswith("version"):
-            version = line.split()[-1].replace('"', "")  # remove quotes
+# version: str = "ukendt version"
+# with open(Path(__file__).parent.parent / "pyproject.toml") as f:
+#     for line in f:
+#         if line.startswith("version"):
+#             version = line.split()[-1].replace('"', "")  # remove quotes
 
 
 def setup_parser(cli: Any) -> Any:
@@ -130,7 +130,7 @@ def download_files(submission: dict, out_dir: Path) -> None:
         files_len: int = len(files_dict)
         print(f"Henter {files_len} fil(er):", flush=True)
         for idx, d in enumerate(files, start=1):
-            filename = urllib.parse.unquote(Path(d.get("url")).name)
+            filename = urllib.parse.unquote(Path(d.get("url")).name)  # type: ignore
             print(
                 f"{idx} af {files_len}: {filename} ({d.get('size')} bytes)...",
                 flush=True,
@@ -156,7 +156,7 @@ def download_files(submission: dict, out_dir: Path) -> None:
 
 
 @Gooey(
-    program_name=f"Smartarkivering, version {version}",
+    program_name="Smartarkivering, version 0.1.3",
     # program_name="Smartarkivering",
     program_description="Klient til at hente afleveringer og filer fra smartarkivering.dk",
     default_size=(600, 700),
