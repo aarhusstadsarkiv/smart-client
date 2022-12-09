@@ -3,6 +3,7 @@ import sys
 import os
 import locale
 import json
+from datetime import date
 from pathlib import Path
 from typing import Any
 import urllib.parse
@@ -15,15 +16,6 @@ import smart_client.config as config
 
 # Setup
 IGNORE_FIELDS: list = ["files", "terms_of_service"]
-
-
-def get_version() -> str:
-    version = "Ukendt version"
-    with open(Path(__file__).absolute().parent.parent / "pyproject.toml") as i:
-        for line in i.readlines():
-            if line.startswith("version"):
-                version = line[line.index('"') + 1 : -2]
-    return version
 
 
 def setup_parser(cli: GooeyParser) -> Any:
@@ -161,7 +153,7 @@ def download_files(submission: dict, out_dir: Path) -> None:
 
 
 @Gooey(
-    program_name=f"Smartarkivering, version {get_version()}",
+    program_name=f"Smartarkivering, version {date.today().strftime('%Y-%m-%d')}",
     # program_name="Smartarkivering",
     program_description="Klient til at hente afleveringer og filer fra smartarkivering.dk",
     default_size=(600, 700),
