@@ -8,6 +8,7 @@ CONFIG_FILE = Path.home() / ".smartarkivering" / "config.json"
 CONFIG_KEYS = [
     "api_key",
     "submission_url",
+    "default_destination"
 ]
 
 

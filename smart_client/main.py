@@ -15,14 +15,18 @@ import smart_client.config as config
 
 # Setup
 IGNORE_FIELDS: list = ["files", "terms_of_service"]
-# version: str = "ukendt version"
-# with open(Path(__file__).parent.parent / "pyproject.toml") as f:
-#     for line in f:
-#         if line.startswith("version"):
-#             version = line.split()[-1].replace('"', "")  # remove quotes
 
 
-def setup_parser(cli: Any) -> Any:
+def get_version() -> str:
+    version = "Ukendt version"
+    with open(Path(__file__).absolute().parent.parent / "pyproject.toml") as i:
+        for line in i.readlines():
+            if line.startswith("version"):
+                version = line[line.index('"') + 1 : -2]
+    return version
+
+
+def setup_parser(cli: GooeyParser) -> Any:
     cli.add_argument(
         "uuid",
         metavar="uuid",
@@ -42,8 +46,9 @@ def setup_parser(cli: Any) -> Any:
         ),
         widget="DirChooser",
         type=Path,
+        default=os.getenv('DEFAULT_DESTINATION') or str(Path(Path.home(), "Downloads", "Smartarkivering")),
         gooey_options={
-            "default_path": str(Path(Path.home(), "Downloads", "Smartarkivering")),
+            "default_path": os.getenv('DEFAULT_DESTINATION') or str(Path(Path.home(), "Downloads", "Smartarkivering")),
             "full_width": True,
         },
     )
@@ -156,7 +161,7 @@ def download_files(submission: dict, out_dir: Path) -> None:
 
 
 @Gooey(
-    program_name="Smartarkivering, version 0.1.3",
+    program_name=f"Smartarkivering, version {get_version()}",
     # program_name="Smartarkivering",
     program_description="Klient til at hente afleveringer og filer fra smartarkivering.dk",
     default_size=(600, 700),
@@ -175,7 +180,7 @@ def main() -> None:
         sys.exit(e)
 
     # General parser
-    cli = GooeyParser(description="Smartarkivering")
+    cli: GooeyParser = GooeyParser(description="Smartarkivering")
     args = setup_parser(cli)
 
     # Tests
@@ -199,7 +204,7 @@ def main() -> None:
     except (HTTPException, ValueError) as e:
         sys.exit(e)
 
-    print("Færdig.\n", flush=True)
+    print("Færdig med at hente filer.\n", flush=True)
 
 
 if __name__ == "__main__":
