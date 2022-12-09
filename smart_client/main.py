@@ -38,9 +38,11 @@ def setup_parser(cli: GooeyParser) -> Any:
         ),
         widget="DirChooser",
         type=Path,
-        default=os.getenv('DEFAULT_DESTINATION') or str(Path(Path.home(), "Downloads", "Smartarkivering")),
+        default=os.getenv("DEFAULT_DESTINATION")
+        or str(Path(Path.home(), "Downloads", "Smartarkivering")),
         gooey_options={
-            "default_path": os.getenv('DEFAULT_DESTINATION') or str(Path(Path.home(), "Downloads", "Smartarkivering")),
+            "default_path": os.getenv("DEFAULT_DESTINATION")
+            or str(Path(Path.home(), "Downloads", "Smartarkivering")),
             "full_width": True,
         },
     )
