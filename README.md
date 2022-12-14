@@ -21,8 +21,9 @@ Kaldet genererer en enkelt smartarkivering.exe fil, som ikke åbner et konsolvin
 ### Hjemmeside
 Fra smartarkivering.dk's forside kan der linkes til samme formular, men modtagende arkiv præ-udfyldt:
 
-- [Kolding](https://selvbetjening.aarhuskommune.dk/da/form/smartarkivering-test?archive=Kolding+Stadsarkiv)
-- [Aalborg](https://selvbetjening.aarhuskommune.dk/da/form/smartarkivering-test?archive=Aalborg+Stadsarkiv)
-- [Aarhus](https://selvbetjening.aarhuskommune.dk/da/form/smartarkivering-test?archive=Aarhus+Stadsarkiv)
+- [Kolding](https://selvbetjening.aarhuskommune.dk/da/content/smartarkivering?archive=Kolding+Stadsarkiv)
+- [Aalborg](https://selvbetjening.aarhuskommune.dk/da/content/smartarkivering?archive=Aalborg+Stadsarkiv)
+- [Aarhus](https://selvbetjening.aarhuskommune.dk/da/content/smartarkivering?archive=Aarhus+Stadsarkiv)
 
+Man kan have alle felter præ-udfyldte, hvis man vil:
 Når man følger linket, bliver man redirected til Mitid, og efter login, videre til formularen. Man kan også benytte links'ne direkte fra andre sider/facebook-opslag m.v. Man skal bare huske at informere brugeren om, at de først bliver sendt til Mitid.
