@@ -46,6 +46,28 @@ def setup_parser(cli: GooeyParser) -> Any:
             "full_width": True,
         },
     )
+    format = cli.add_argument_group("Filformat")
+    format_chooser = format.add_mutually_exclusive_group(
+        required=True,
+        gooey_options={
+            "title": "Vælg filformat",
+            "initial_selection": 0 if os.getenv("DEFAULT_FORMAT") == "json" else 1,
+        },
+    )
+    format_chooser.add_argument(
+        "--json",
+        dest="json",
+        action="store_true",
+        help="Save submission-data as json",
+        gooey_options={"full_width": False},
+    )
+    format_chooser.add_argument(
+        "--xml",
+        dest="xml",
+        action="store_true",
+        help="Save submission-data as xml",
+        gooey_options={"full_width": False},
+    )
 
     args = cli.parse_args()
     return args
