@@ -5,7 +5,7 @@ from pathlib import Path
 
 CONFIG_FILE = Path.home() / ".smartarkivering" / "config.json"
 
-CONFIG_KEYS = ["api_key", "submission_url", "default_destination"]
+CONFIG_KEYS = ["api_key", "submission_url", "default_destination", "default_format"]
 
 
 def load_configuration() -> None:
