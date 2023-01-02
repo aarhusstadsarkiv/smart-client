@@ -40,6 +40,14 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "dicttoxml"
+version = "1.7.16"
+description = "Converts a Python dictionary or other native data type into a valid XML string."
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[[package]]
 name = "future"
 version = "0.18.2"
 description = "Clean single-source support for Python 3 and 2"
@@ -272,7 +280,7 @@ six = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.12"
-content-hash = "b968820faeeb5c1f93f55db2c39d1ba20771c20c14c2de2f078145c412da1fd2"
+content-hash = "3d56b51b828e18abb72dfd9c16e8f6d1df1d6f6ebfe62f2c8d422d3e3a7039a6"
 
 [metadata.files]
 altgraph = [
@@ -289,6 +297,10 @@ certifi = [
 ]
 colored = [
     {file = "colored-1.4.3.tar.gz", hash = "sha256:b7b48b9f40e8a65bbb54813d5d79dd008dc8b8c5638d5bbfd30fc5a82e6def7a"},
+]
+dicttoxml = [
+    {file = "dicttoxml-1.7.16-py3-none-any.whl", hash = "sha256:8677671496d0d38e66c7179f82a7e9059f94887777955dc71b0ac602ee637c26"},
+    {file = "dicttoxml-1.7.16.tar.gz", hash = "sha256:6f36ce644881db5cd8940bee9b7cb3f3f6b7b327ba8a67d83d3e2caa0538bf9d"},
 ]
 future = [
     {file = "future-0.18.2.tar.gz", hash = "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"},

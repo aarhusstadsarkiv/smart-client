@@ -21,9 +21,9 @@ Kaldet genererer en enkelt smartarkivering.exe fil, som ikke åbner et konsolvin
 ### Hjemmeside
 Fra smartarkivering.dk's forside kan der linkes til samme formular, men modtagende arkiv præ-udfyldt:
 
-- [Kolding](https://selvbetjening.aarhuskommune.dk/da/content/smartarkivering?archive=Kolding+Stadsarkiv)
-- [Aalborg](https://selvbetjening.aarhuskommune.dk/da/content/smartarkivering?archive=Aalborg+Stadsarkiv)
-- [Aarhus](https://selvbetjening.aarhuskommune.dk/da/content/smartarkivering?archive=Aarhus+Stadsarkiv)
+- [Kolding](https://selvbetjening.aarhuskommune.dk/da/content/smartarkivering?archive=kol)
+- [Aalborg](https://selvbetjening.aarhuskommune.dk/da/content/smartarkivering?archive=aal)
+- [Aarhus](https://selvbetjening.aarhuskommune.dk/da/content/smartarkivering?archive=aar)
 
 **Man kan have alle felter præ-udfyldte, hvis man vil!**
 
