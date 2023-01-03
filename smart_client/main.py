@@ -177,7 +177,7 @@ def save_submission_info(submission: dict, format: str, out_dir: Path) -> None:
         if format == "json":
             json.dump(submission, f, ensure_ascii=False, indent=4)
         else:
-            xml = dicttoxml.dicttoxml(submission, custom_root="submission", attr_type=False)
+            xml = dicttoxml.dicttoxml(submission, custom_root="submission", attr_type=False, item_func=lambda _: 'file')
             f.write(parseString(xml).toprettyxml())
 
 

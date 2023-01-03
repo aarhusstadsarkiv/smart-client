@@ -14,7 +14,7 @@ Der arbejdes med releases af .exe-filer.
 ### Releases
 Pyinstaller virker (indtil videre!) med følgende kald:
 
-`pyinstaller --onefile --windowed --name smartarkivering .\smart_client\main.py`
+`poetry run pyinstaller --onefile --windowed --name smartarkivering .\smart_client\main.py`
 
 Kaldet genererer en enkelt smartarkivering.exe fil, som ikke åbner et konsolvindue.
 
@@ -24,6 +24,13 @@ Fra smartarkivering.dk's forside kan der linkes til samme formular, men modtagen
 - [Kolding](https://selvbetjening.aarhuskommune.dk/da/content/smartarkivering?archive=kol)
 - [Aalborg](https://selvbetjening.aarhuskommune.dk/da/content/smartarkivering?archive=aal)
 - [Aarhus](https://selvbetjening.aarhuskommune.dk/da/content/smartarkivering?archive=aar)
+
+Eller via det kommende smartarkivering.dk;
+
+- [Kolding](https://aarhusstadsarkiv.github.io/smart-web/form?archive=kol)
+- [Aalborg](https://aarhusstadsarkiv.github.io/smart-web/form?archive=aal)
+- [Aarhus](https://aarhusstadsarkiv.github.io/smart-web/form?archive=aar)
+
 
 **Man kan have alle felter præ-udfyldte, hvis man vil!**
 
