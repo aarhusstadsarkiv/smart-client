@@ -3,9 +3,20 @@
 ### GUI klient
 En lille Gooey-baseret klient til hentning af afleveringer og tilhørende filer via Smartarkivering.dk's API.
 
-Konfigurationsfilen med endpoints og api-nøgle skal placeres i hver brugers Home-folder. Herved kan man styre præcis hvilke medarbejdere, der kan bruge programmet.
+Konfigurationsfilen ```config.json``` med endpoints og api-nøgle skal placeres i en mappe navngivet ``.smartarkivering`` (husk punktum) i roden af hver brugers Home-folder. Herved kan man styre præcis hvilke medarbejdere, der kan bruge programmet. Aktuelt ser konfigurationsfilen således ud:
 
-Der arbejdes med releases af .exe-filer. 
+````json
+{
+    "api_key": "[api-key]",  # use the api-key given to you
+    "submission_url": "https://selvbetjening.aarhuskommune.dk/da/webform_rest/smartarkivering_test/submission",
+    "default_destination": "[default-path-to-dir-where-downloaded-files-are-to-be-stored]",
+    "default_format": "json",  # currently "json" and "xml" are allowed
+    "default_hash": "sha256",  # currently "md5" and "sha256" are allowed
+    "archive_prefix": "[archival-prefix]"  # use the 3-char prefix given to you
+}
+````
+
+Seneste version af GUI-klienten kan til enhver tid hentes [her](https://github.com/aarhusstadsarkiv/smart-client/releases)
 
 ### Api
 - submission-endpoint (payload indeholder også url'er til filer i `data.linked.files`)
