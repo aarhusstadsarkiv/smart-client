@@ -7,12 +7,12 @@ Konfigurationsfilen ```config.json``` med endpoints og api-nøgle skal placeres 
 
 ````json
 {
-    "api_key": "[api-key]",  # use the api-key given to you
-    "submission_url": "https://selvbetjening.aarhuskommune.dk/da/webform_rest/smartarkivering_test/submission",
+    "api_key": "[api-key-given-to-you]",
+    "submission_url": "[endpoint-from-where-to-fetch-submissions-and-files]",
     "default_destination": "[default-path-to-dir-where-downloaded-files-are-to-be-stored]",
-    "default_format": "json",  # currently "json" and "xml" are allowed
-    "default_hash": "sha256",  # currently "md5" and "sha256" are allowed
-    "archive_prefix": "[archival-prefix]"  # use the 3-char prefix given to you
+    "default_format": "[json|xml]",
+    "default_hash": "[md5|sha256]",
+    "archive_prefix": "[archival-prefix-given-to-you]"
 }
 ````
 
