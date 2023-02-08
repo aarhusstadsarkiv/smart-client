@@ -1,5 +1,6 @@
 from http.client import HTTPException
 import os
+import sys
 import locale
 import hashlib
 import json
@@ -264,7 +265,7 @@ def main() -> None:
     try:
         config.load_configuration()
     except (FileNotFoundError, ValueError) as e:
-        exit(e)
+        sys.exit(e)
 
     # Setup parser
     cli: GooeyParser = GooeyParser(description="Smartarkivering")
@@ -274,35 +275,35 @@ def main() -> None:
     try:
         uuid.UUID(args.uuid)
     except ValueError as e:
-        exit("FEJL. Det indtastede uuid har ikke det korrekte format.")
+        sys.exit("FEJL. Det indtastede uuid har ikke det korrekte format.")
 
     if not Path(args.destination).is_dir():
-        exit("FEJL. Destinationen skal være en eksisterende mappe.")
+        sys.exit("FEJL. Destinationen skal være en eksisterende mappe.")
 
     out_dir = Path(args.destination, args.uuid)
     try:
         out_dir.mkdir(parents=True, exist_ok=True)
     except Exception as e:
-        exit(f"FEJl. Kan ikke oprette destinationsmappen: {e}")
+        sys.exit(f"FEJl. Kan ikke oprette destinationsmappen: {e}")
 
     # Fetch submission info
     try:
         # get_submission_info prints any errors with http or json-parsing
         submission: dict = get_submission_info(args.uuid)
     except (Exception) as e:
-        exit(e)
+        sys.exit(e)
 
     # extract info on uploaded files
     try:
         fileinfo: list[dict] = extract_filelist(submission)
     except ValueError:
-        exit("FEJL. Afleveringen indeholder ingen filreferencer")
+        sys.exit("FEJL. Afleveringen indeholder ingen filreferencer")
 
     # download attached files
     try:
         download_files(fileinfo, out_dir)
     except (Exception) as e:
-        exit(e)
+        sys.exit(e)
 
     # update fileinfo
     hash = "md5" if args.md5 else "sha256"
