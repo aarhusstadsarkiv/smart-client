@@ -127,9 +127,13 @@ def get_submission_info(uuid: str) -> dict:
             raise HTTPException(
                 f"FEJl. Der findes ingen aflevering med dette uuid: {uuid}"
             )
+        elif r.status_code in [401, 403]:
+            raise HTTPException(
+                f"FEJl. Adgang nægtet med den brugte API-nøgle til: {r.url}"
+            )
         elif r.status_code != 200:
             raise HTTPException(
-                f"FEJl. Kunne ikke hente en aflevering med dette uuid: {uuid}"
+                f"FEJl. Kunne ikke hente en aflevering med dette uuid: {uuid}. Status_code: {r.status_code}. Fejlbesked: {r.text}"
             )
 
         submission: dict = r.json()
@@ -216,12 +220,22 @@ def download_files(files: list[dict], out_dir: Path) -> None:
             )
             r = client.get(d.get("url"), params={"api-key": os.getenv("API_KEY")})
             if r.status_code == 404:
+                print(
+                    f"FEJl. Afleveringen har ikke nogen vedhæftet fil med dette navn: {filename}",
+                    flush=True
+                )
+                continue
+            elif r.status_code in [401, 403]:
                 raise HTTPException(
-                    f"FEJl. Afleveringen har ikke nogen vedhæftet fil med dette navn: {filename}"
+                    f"FEJl. Adgang nægtet med den brugte API-nøgle til: {r.url}"
+                )
+            elif str(r.status_code).startswith("5"):
+                raise HTTPException(
+                    f"FEJl. Serveren har problemer. Prøv igen senere eller anmeld fejlen til stadsarkiv@aarhus.dk"
                 )
             elif r.status_code != 200:
                 raise HTTPException(
-                    f"FEJl. Der Kunne ikke hentes en fil på serveren med dette navn: {filename}"
+                    f"FEJl. Der Kunne ikke hentes en fil på serveren med dette navn: {filename}. Status_code: {r.status_code} Server-respons: {r.text}"
                 )
 
             with open(filepath, "wb") as download:
