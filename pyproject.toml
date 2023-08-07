@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "smart-client"
-version = "0.1.8"
+version = "0.1.9"
 description = "Klient til Smartarkivering.dk-submissions"
 authors = ["Claus Juhl Knudsen <cjk@aarhus.dk>"]
 include = ["pyproject.toml"]
@@ -11,9 +11,22 @@ Gooey = "^1.0.8"
 httpx = "^0.23.0"
 pyinstaller = "^5.7.0"
 dicttoxml = "^1.7.16"
+black = "^23.7.0"
 
 [tool.poetry.scripts]
 smart = "smart_client.main:main"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.4.1"
+
+[tool.mypy]
+python_version = 3.9
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+# Because we disallow untyped defs in the main module,
+# check_untyped_defs only has an impact in tests/
+check_untyped_defs = true
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

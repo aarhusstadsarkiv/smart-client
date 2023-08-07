@@ -52,7 +52,7 @@ def setup_parser(cli: GooeyParser) -> Any:
         required=True,
         gooey_options={
             "title": "Metadata format",
-            'show_border': True,
+            "show_border": True,
             "initial_selection": 0 if os.getenv("DEFAULT_FORMAT") == "json" else 1,
         },
     )
@@ -75,7 +75,7 @@ def setup_parser(cli: GooeyParser) -> Any:
         required=True,
         gooey_options={
             "title": "Checksum",
-            'show_border': True,
+            "show_border": True,
             "initial_selection": 0 if os.getenv("DEFAULT_HASH") == "md5" else 1,
         },
     )
@@ -133,7 +133,7 @@ def get_submission_info(uuid: str) -> dict:
             )
         elif r.status_code != 200:
             raise HTTPException(
-                f"FEJl. Kunne ikke hente en aflevering med dette uuid: {uuid}. Status_code: {r.status_code}. Fejlbesked: {r.text}"
+                f"FEJl. Kunne ikke hente en aflevering med dette uuid: {uuid}. Status_code: {r.status_code}, fejlbesked: {r.text}"
             )
 
         submission: dict = r.json()
@@ -155,7 +155,7 @@ def extract_filelist(submission: dict) -> list[dict]:
 
 def generate_submission_info(submission: dict, files: list[dict]) -> dict:
     out: dict = {}
-    prefix: str = os.getenv("ARCHIVE_PREFIX").lower()
+    prefix: str = os.getenv("ARCHIVE_PREFIX", "").lower()
     for k, v in submission["data"].items():
         if not v:
             continue
@@ -182,7 +182,12 @@ def save_submission_info(submission: dict, format: str, out_dir: Path) -> None:
         if format == "json":
             json.dump(submission, f, ensure_ascii=False, indent=4)
         else:
-            xml = dicttoxml.dicttoxml(submission, custom_root="submission", attr_type=False, item_func=lambda _: 'file')
+            xml = dicttoxml.dicttoxml(
+                submission,
+                custom_root="submission",
+                attr_type=False,
+                item_func=lambda _: "file",
+            )
             f.write(parseString(xml).toprettyxml())
 
 
@@ -203,9 +208,7 @@ def download_files(files: list[dict], out_dir: Path) -> None:
         files_len: int = len(files)
         print(f"Henter {files_len} fil(er):", flush=True)
         for idx, d in enumerate(files, start=1):
-            filename = d.get(
-                "filename"
-            )  # urllib.parse.unquote(Path(d.get("url")).name)  # type: ignore
+            filename = d["filename"]  # type: ignore
             filepath = Path(out_dir, filename)
             if filepath.exists():
                 print(
@@ -218,11 +221,11 @@ def download_files(files: list[dict], out_dir: Path) -> None:
                 f"{idx} af {files_len}: {filename} ({d.get('size')} bytes)...",
                 flush=True,
             )
-            r = client.get(d.get("url"), params={"api-key": os.getenv("API_KEY")})
+            r = client.get(d["url"], params={"api-key": os.getenv("API_KEY")})
             if r.status_code == 404:
                 print(
                     f"FEJl. Afleveringen har ikke nogen vedhæftet fil med dette navn: {filename}",
-                    flush=True
+                    flush=True,
                 )
                 continue
             elif r.status_code in [401, 403]:
@@ -247,7 +250,7 @@ def update_fileinfo(files: list[dict], out_dir: Path, algoritm: str) -> list[dic
     IGNORE_KEYS = ["url", "id"]
 
     def compute_hash(filepath: Path) -> str:
-        hash = hashlib.md5() if algoritm == "md5" else hashlib.sha256() 
+        hash = hashlib.md5() if algoritm == "md5" else hashlib.sha256()
         with open(filepath, "rb") as f:
             for chunk in iter(lambda: f.read(4096), b""):
                 hash.update(chunk)
@@ -263,7 +266,7 @@ def update_fileinfo(files: list[dict], out_dir: Path, algoritm: str) -> list[dic
 
 
 @Gooey(
-    program_name=f"Smartarkivering, version {date.today().strftime('%Y-%m-%d')}",
+    program_name=f"Smartarkivering, version 0.1.9",
     # program_name="Smartarkivering",
     program_description="Klient til at hente afleveringer og filer fra smartarkivering.dk",
     default_size=(600, 700),
@@ -278,8 +281,10 @@ def main() -> None:
     # Load config or exit
     try:
         config.load_configuration()
-    except (FileNotFoundError, ValueError) as e:
-        sys.exit(e)
+    except FileNotFoundError:
+        sys.exit("Konfigurationsfilen kan ikke findes")
+    except ValueError as e:
+        sys.exit("Konfigurationsfilen kan ikke parses")
 
     # Setup parser
     cli: GooeyParser = GooeyParser(description="Smartarkivering")
@@ -304,8 +309,8 @@ def main() -> None:
     try:
         # get_submission_info prints any errors with http or json-parsing
         submission: dict = get_submission_info(args.uuid)
-    except (Exception) as e:
-        sys.exit(e)
+    except HTTPException as e:
+        sys.exit(e.args[0])
 
     # extract info on uploaded files
     try:
@@ -316,15 +321,15 @@ def main() -> None:
     # download attached files
     try:
         download_files(fileinfo, out_dir)
-    except (Exception) as e:
-        sys.exit(e)
+    except Exception as e:
+        sys.exit(e.args[0])
 
     # update fileinfo
     hash = "md5" if args.md5 else "sha256"
     updated_fileinfo = update_fileinfo(fileinfo, out_dir, hash)
 
     # put together new submission-data
-    submission: dict = generate_submission_info(submission, updated_fileinfo)
+    submission = generate_submission_info(submission, updated_fileinfo)
     fmt: str = "json" if args.json else "xml"
 
     # save submission data to file

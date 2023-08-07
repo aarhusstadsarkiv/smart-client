@@ -29,6 +29,8 @@ Pyinstaller virker (indtil videre!) med følgende kald:
 
 Kaldet genererer en enkelt smartarkivering.exe fil, som ikke åbner et konsolvindue.
 
+**NOTE:** Husk at man manuelt skal opdatere versionsnummeret i både pyproject.toml OG i gooey's 'program_name'-parameter 
+
 ### Hjemmeside
 Fra smartarkivering.dk's forside kan der linkes til samme formular, men modtagende arkiv præ-udfyldt:
 
