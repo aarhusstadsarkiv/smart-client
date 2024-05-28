@@ -53,7 +53,7 @@ def setup_parser(cli: GooeyParser) -> Any:
         gooey_options={
             "title": "Metadata format",
             "show_border": True,
-            "initial_selection": 0 if os.getenv("DEFAULT_FORMAT") == "json" else 1,
+            # "initial_selection": 0 if os.getenv("DEFAULT_FORMAT") == "json" else 1,
         },
     )
     format_chooser.add_argument(
@@ -70,7 +70,13 @@ def setup_parser(cli: GooeyParser) -> Any:
         help="Gem metadata i xml-fil",
         gooey_options={"full_width": False},
     )
-
+    format_chooser.add_argument(
+        "--arkibas",
+        dest="arkibas",
+        action="store_true",
+        help="Gem metadata i arkibas csv-format",
+        gooey_options={"full_width": False},
+    )
     hash_chooser = cli.add_mutually_exclusive_group(
         required=True,
         gooey_options={
@@ -169,6 +175,8 @@ def generate_submission_info(submission: dict, files: list[dict]) -> dict:
 
 
 def save_submission_info(submission: dict, format: str, out_dir: Path) -> None:
+    if format == "arkibas":
+        format = "csv"
     filepath = Path(out_dir, f"submission.{format}")
     if filepath.exists():
         print(
@@ -179,9 +187,9 @@ def save_submission_info(submission: dict, format: str, out_dir: Path) -> None:
         return
 
     with open(filepath, "w", encoding="utf-8") as f:
-        if format == "json":
+        if format in ["json", "csv"]:
             json.dump(submission, f, ensure_ascii=False, indent=4)
-        else:
+        elif format == "xml":
             xml = dicttoxml.dicttoxml(
                 submission,
                 custom_root="submission",
@@ -330,7 +338,14 @@ def main() -> None:
 
     # put together new submission-data
     submission = generate_submission_info(submission, updated_fileinfo)
-    fmt: str = "json" if args.json else "xml"
+    # fmt: str = "json" if args.json else "xml"
+    fmt: str = ""
+    if args.json:
+        fmt = "json"
+    elif args.xml:
+        fmt = "xml"
+    else:
+        fmt = "arkibas"
 
     # save submission data to file
     save_submission_info(submission, format=fmt, out_dir=out_dir)
