@@ -154,7 +154,7 @@ def extract_filelist(submission: dict) -> list[dict]:
 
     files: list[dict] = []
     for k, v in files_dict.items():
-        v["filename"] = urllib.parse.unquote(Path(v.get("url")).name)  # type: ignore
+        v["filename"] = urllib.parse.unquote(Path(v.get("url")).name, encoding="utf-8")  # type: ignore
         files.append(v)
     return files
 
@@ -249,7 +249,7 @@ def download_files(files: list[dict], out_dir: Path) -> None:
                     f"FEJl. Der Kunne ikke hentes en fil på serveren med dette navn: {filename}. Status_code: {r.status_code} Server-respons: {r.text}"
                 )
 
-            with open(filepath, "wb", encoding="utf-8") as download:
+            with open(filepath, "wb") as download:
                 download.write(r.content)
 
 
@@ -274,7 +274,7 @@ def update_fileinfo(files: list[dict], out_dir: Path, algoritm: str) -> list[dic
 
 
 @Gooey(
-    program_name=f"Smartarkivering, version 0.1.10",
+    program_name=f"Smartarkivering, version 0.1.11",
     # program_name="Smartarkivering",
     program_description="Klient til at hente afleveringer og filer fra smartarkivering.dk",
     default_size=(600, 700),

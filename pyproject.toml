@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "smart-client"
-version = "0.1.10"
+version = "0.1.11"
 description = "Klient til Smartarkivering.dk-submissions"
 authors = ["Claus Juhl Knudsen <cjk@aarhus.dk>"]
 include = ["pyproject.toml"]
