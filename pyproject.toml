@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "smart-client"
-version = "0.1.9"
+version = "0.1.10"
 description = "Klient til Smartarkivering.dk-submissions"
 authors = ["Claus Juhl Knudsen <cjk@aarhus.dk>"]
 include = ["pyproject.toml"]
@@ -20,7 +20,7 @@ smart = "smart_client.main:main"
 mypy = "^1.4.1"
 
 [tool.mypy]
-python_version = 3.9
+python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
