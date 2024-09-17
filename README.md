@@ -5,16 +5,16 @@ En lille Gooey-baseret klient til hentning af afleveringer og tilhørende filer 
 
 Konfigurationsfilen ```config.json``` med endpoints og api-nøgle skal placeres i en mappe navngivet ``.smartarkivering`` (husk punktum) i roden af hver brugers Home-folder. Herved kan man styre præcis hvilke medarbejdere, der kan bruge programmet. Aktuelt ser konfigurationsfilen således ud:
 
-````json
+```json
 {
     "api_key": "[api-key-given-to-you]",
     "submission_url": "[endpoint-from-where-to-fetch-submissions-and-files]",
     "default_destination": "[default-path-to-dir-where-downloaded-files-are-to-be-stored]",
-    "default_format": "[json|xml]",
+    "default_format": "[json|xml|arkibas]",
     "default_hash": "[md5|sha256]",
     "archive_prefix": "[archival-prefix-given-to-you]"
 }
-````
+```
 
 Seneste version af GUI-klienten kan til enhver tid hentes [her](https://github.com/aarhusstadsarkiv/smart-client/releases)
 
