@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 from typing import Any, Optional, List, Dict
 from xml.dom.minidom import parseString
+
 # from datetime import datetime
 import urllib.parse
 import uuid
@@ -102,6 +103,7 @@ def generate_arkibas_csvs(dir_path: Path, submission: Dict) -> None:
             journal.writerow(
                 {
                     "Indhold": submission.get("description"),
+                    "Mængde": len(submission["files"]),
                     "Placering": submission.get("location"),
                     "Filnavn": file.get("filename"),
                 }
@@ -381,7 +383,7 @@ def update_fileinfo(files: List[Dict], out_dir: Path, algoritm: str) -> List[Dic
 
 
 @Gooey(
-    program_name="Smartarkivering, version 0.2.1",
+    program_name="Smartarkivering, version 0.2.2",
     # program_name="Smartarkivering",
     program_description="Klient til at hente afleveringer og filer fra smartarkivering.dk",
     default_size=(600, 700),
