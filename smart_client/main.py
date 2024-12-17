@@ -383,7 +383,7 @@ def update_fileinfo(files: List[Dict], out_dir: Path, algoritm: str) -> List[Dic
 
 
 @Gooey(
-    program_name="Smartarkivering, version 0.2.2",
+    program_name="Smartarkivering, version 0.2.3",
     # program_name="Smartarkivering",
     program_description="Klient til at hente afleveringer og filer fra smartarkivering.dk",
     default_size=(600, 700),
