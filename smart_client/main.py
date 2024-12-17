@@ -395,17 +395,17 @@ def update_fileinfo(files: List[Dict], out_dir: Path, algoritm: str) -> List[Dic
     show_success_modal=False,
 )
 def main() -> None:
-    # Load config or exit
-    try:
-        config.load_configuration()
-    except FileNotFoundError:
-        sys.exit("Konfigurationsfilen kan ikke findes")
-    except ValueError:
-        sys.exit("Konfigurationsfilen kan ikke parses")
-
     # Setup parser
     cli: GooeyParser = GooeyParser(description="Smartarkivering")
     args = setup_parser(cli)
+
+    # Load config or print error in gooey-field and exit
+    try:
+        config.load_configuration()
+    except FileNotFoundError:
+        sys.exit(f"FEJL. Konfigurationsfilen findes ikke her:\n {Path.home() / '.smartarkivering' / 'config.json'}")
+    except ValueError:
+        sys.exit("FEJL. Konfigurationsfilen kan ikke parses som valid json")
 
     # Validate arguments
     try:

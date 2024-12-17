@@ -46,5 +46,4 @@ Eller via det kommende smartarkivering.dk;
 
 
 **Man kan have alle felter præ-udfyldte, hvis man vil!**
-
 Når man følger linket, bliver man redirected til Mitid, og efter login, videre til formularen. Man kan også benytte links'ne direkte fra andre sider/facebook-opslag m.v. Man skal bare huske at informere brugeren om, at de først bliver sendt til Mitid.
