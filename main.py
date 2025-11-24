@@ -1,28 +1,25 @@
-from http.client import HTTPException
 import os
 import csv
 import sys
 import locale
 import hashlib
 import json
-
-# from datetime import date
-from pathlib import Path
-from typing import Any, Optional, List, Dict
-from xml.dom.minidom import parseString
-
-# from datetime import datetime
 import urllib.parse
 import uuid
-
+from http.client import HTTPException
+from pathlib import Path
+from typing import Any, Optional
+from xml.dom.minidom import parseString
+from datetime import datetime
 import httpx
 import dicttoxml
 from gooey import Gooey, GooeyParser
 
-import smart_client.config as config
+import config as config
 
 
 ADDITIONAL_FIELDS: list = ["navn", "email", "telefon"]
+
 ARKIBAS_JOURNAL_COLS: list = [
     "JournalAar",
     "JournalNr",
@@ -41,6 +38,7 @@ ARKIBAS_JOURNAL_COLS: list = [
     "Giver1Email",
     "Giver1Bemærkninger",
 ]
+
 ARKIBAS_CONTENT_COLS: list = [
     "Journalnummer",
     "Indhold",
@@ -52,17 +50,9 @@ ARKIBAS_CONTENT_COLS: list = [
 ]
 
 
-def generate_arkibas_csvs(dir_path: Path, submission: Dict) -> None:
+def generate_arkibas_csvs(dir_path: Path, submission: dict) -> None:
     journal_path: Path = dir_path / "journal.csv"
     content_path: Path = dir_path / "indhold.csv"
-
-    # if any(x.exists() for x in [journal_path, content_path]):
-    #     print(
-    #         "ADVARSEL. En metadatafil fra samme uuid"
-    #         " ligger allerede i mappen. Overskriver ikke.",
-    #         flush=True,
-    #     )
-    #     return
 
     if journal_path.exists():
         print(
@@ -85,11 +75,6 @@ def generate_arkibas_csvs(dir_path: Path, submission: Dict) -> None:
         journal.writeheader()
         journal.writerow(
             {
-                # "ModtagetDato": datetime.fromtimestamp(
-                #     int(submission.get("completed", "1234567890"))
-                # )
-                # or None,
-                # "Bemærkning": f"SmartarkiveringsID: {submission.get('uuid')}",
                 "Giver1Navn": submission.get("navn"),
                 "Giver1Telefon": submission.get("telefon"),
                 "Giver1Email": submission.get("email"),
@@ -119,9 +104,6 @@ def default_value(field: str, value: Optional[str]) -> int:
                 return 1
             elif value == "arkibas":
                 return 2
-            else:
-                return 0
-        return 0
     return 0
 
 
@@ -208,12 +190,11 @@ def setup_parser(cli: GooeyParser) -> Any:
     return args
 
 
-def get_submission_info(uuid: str) -> Dict:
+def get_submission_info(uuid: str) -> dict:
     """Fetch and save submission-data
 
-    Given a uuid and an out_dir, it tries to fetch the submission-data from
-    the API. If fetched, it is then saved to a json-file and returns it as a
-    dict.
+    Given a uuid and an out_dir, it tries to fetch and return the submission-data from
+    the API.
 
     Args:
         uuid (UUID): uuid of the submission. Copy from the mail-notification
@@ -246,25 +227,29 @@ def get_submission_info(uuid: str) -> Dict:
                 f"FEJl. Kunne ikke hente en aflevering med dette uuid: {uuid}. Status_code: {r.status_code}, fejlbesked: {r.text}"
             )
 
-        submission: Dict = r.json()
+        submission: dict = r.json()
         return submission
 
 
-def extract_filelist(submission: Dict) -> List[Dict]:
-    """get file_info from the submission-data"""
-    files_dict: Dict = submission["data"]["linked"].get("files")
-    if not files_dict:
+def get_fileinfo(submission: dict) -> list[dict]:
+    """Extract and enhance 'files'-data from the submission"""
+
+    files: list[dict] = []
+    try:
+        files_dict: dict = submission["data"]["linked"]["files"]
+    except Exception:
+    # if not files_dict:
         raise ValueError("FEJL. Afleveringen indeholder ingen filer.")
 
-    files: List[Dict] = []
     for k, v in files_dict.items():
         v["filename"] = urllib.parse.unquote(Path(v.get("url")).name, encoding="utf-8")  # type: ignore
         files.append(v)
+
     return files
 
 
-def generate_submission_info(submission: Dict, files: List[Dict]) -> Dict:
-    out: Dict = {}
+def generate_submission_info(submission: dict, files: list[dict]) -> dict:
+    out: dict = {}
     prefix: str = os.getenv("ARCHIVE_PREFIX", "").lower()
     for k, v in submission["data"].items():
         if not v:
@@ -279,8 +264,8 @@ def generate_submission_info(submission: Dict, files: List[Dict]) -> Dict:
     return out
 
 
-def save_submission_info(submission: Dict, format: str, out_dir: Path) -> None:
-    # Calculate filename
+def save_submission_info(submission: dict, format: str, out_dir: Path) -> None:
+
     if format == "arkibas":
         generate_arkibas_csvs(out_dir, submission)
         return
@@ -288,12 +273,12 @@ def save_submission_info(submission: Dict, format: str, out_dir: Path) -> None:
     filepath = Path(out_dir, f"submission.{format}")
     # Test if filename already exists
     if filepath.exists():
+        filepath = Path(out_dir, f"submission_{datetime.now().strftime('%Y%m%dT%H%M%S')}.{format}")
         print(
-            "ADVARSEL. En metadatafil fra samme uuid"
-            " ligger allerede i mappen. Overskriver ikke.",
+            "\nADVARSEL. En metadatafil fra samme uuid"
+            " ligger allerede i mappen. Gemmer med timestamp appended.",
             flush=True,
         )
-        return
 
     with open(filepath, "w", encoding="utf-8") as f:
         if format == "json":
@@ -308,10 +293,10 @@ def save_submission_info(submission: Dict, format: str, out_dir: Path) -> None:
             f.write(parseString(xml).toprettyxml())
 
 
-def download_files(files: List[Dict], out_dir: Path) -> None:
-    """Download all form-files
+def download_files(files: list[dict], out_dir: Path) -> list[dict]:
+    """Download all form-files and add status to fileinfo
 
-    Given a submission-dict (returned from get_submission_info()) and an out_dir, it
+    Given a filelist (extracted from the submission) and an out_dir, it
     tries to download all files attached to the submitted form to the out_dir.
 
     Args:
@@ -320,50 +305,71 @@ def download_files(files: List[Dict], out_dir: Path) -> None:
 
     Raises:
         HTTPException: All non-200 status_codes are raised
+    
+    Returns:
+        List of file-dicts. File-status can be [existing, missing, access_denied, ok, error, download_error]
     """
+    files_out: list[dict] = []
+
     with httpx.Client() as client:
         files_len: int = len(files)
         print(f"Henter {files_len} fil(er):", flush=True)
         for idx, d in enumerate(files, start=1):
-            filename = d["filename"]  # type: ignore
+            file: dict = d
+            filename = file["filename"]  # type: ignore
             filepath = Path(out_dir, filename)
-            if filepath.exists():
-                print(
-                    f"ADVARSEL. Denne fil ligger allerede i afleveringsmappen: {filename}",
-                    flush=True,
-                )
-                continue
 
             print(
-                f"{idx} af {files_len}: {filename} ({d.get('size')} bytes)...",
+                f"Henter {idx} af {files_len}: {filename} ({file.get('size')} bytes)...",
                 flush=True,
             )
+
+            if filepath.exists():
+                print("INFO. Filen ligger allerede i afleveringsmappen", flush=True)
+                file["status"] = "existing"
+                files_out.append(file)
+                continue
+
             r = client.get(d["url"], params={"api-key": os.getenv("API_KEY")})
+
             if r.status_code == 404:
                 print(
-                    f"FEJl. Afleveringen har ikke nogen vedhæftet fil med dette navn: {filename}",
+                    "FEJl. Afleveringen indeholder ingen fil med dette navn",
                     flush=True,
                 )
+                file["status"] = "missing"
+                files_out.append(file)
                 continue
+
             elif r.status_code in [401, 403]:
-                raise HTTPException(
-                    f"FEJl. Adgang nægtet med den brugte API-nøgle til: {r.url}"
-                )
+                print("FEJl. Adgang til filen nægtet", flush=True)
+                file["status"] = "access_denied"
+                files_out.append(file)
+                continue
+
             elif str(r.status_code).startswith("5"):
-                raise HTTPException(
-                    "FEJl. Serveren har problemer. Prøv igen senere eller anmeld fejlen til stadsarkiv@aarhus.dk"
+                print("FEJl. Serveren har problemer. Kan ikke hente filen", flush=True)
+                file["status"] = "error"
+                files_out.append(file)
+                continue
+
+            try:
+                with open(filepath, "wb") as download:
+                    download.write(r.content)
+                file["status"] = "ok"
+            except Exception as e:
+                print(
+                    f"FEJl. Kunne ikke downloade {filename}. Status_code: {r.status_code} Fejl: {e}"
                 )
-            elif r.status_code != 200:
-                raise HTTPException(
-                    f"FEJl. Der Kunne ikke hentes en fil på serveren med dette navn: {filename}. Status_code: {r.status_code} Server-respons: {r.text}"
-                )
+                file["status"] = "download_error"
 
-            with open(filepath, "wb") as download:
-                download.write(r.content)
+            files_out.append(file)
+
+    return files_out
 
 
-def update_fileinfo(files: List[Dict], out_dir: Path, algoritm: str) -> List[Dict]:
-    """Adds checksum to and removes unnecessary metadata from each file"""
+def update_fileinfo(files: list[dict], out_dir: Path, algoritm: str) -> list[dict]:
+    """Adds checksum if file is downloaded and remove unnecessary metadata from each file"""
     IGNORE_KEYS = ["url", "id"]
 
     def compute_hash(filepath: Path) -> str:
@@ -373,17 +379,19 @@ def update_fileinfo(files: List[Dict], out_dir: Path, algoritm: str) -> List[Dic
                 hash.update(chunk)
         return hash.hexdigest()
 
-    out: List[Dict] = []
+    out: list[dict] = []
     for file in files:
-        path = out_dir / file["filename"]
-        file["checksum"] = f"{algoritm}:{compute_hash(path)}"
+        if file.get("status") in ["ok", "existing"]:
+            path = out_dir / file["filename"]
+            file["checksum"] = f"{algoritm}:{compute_hash(path)}"
+
         new_file = {k: v for k, v in file.items() if k not in IGNORE_KEYS}
         out.append(new_file)
     return out
 
 
 @Gooey(
-    program_name="Smartarkivering, version 0.2.3",
+    program_name="Smartarkivering, version 0.2.5",
     # program_name="Smartarkivering",
     program_description="Klient til at hente afleveringer og filer fra smartarkivering.dk",
     default_size=(600, 700),
@@ -408,6 +416,16 @@ def main() -> None:
         sys.exit("FEJL. Konfigurationsfilen kan ikke parses som valid json")
 
     # Validate arguments
+    fmt: str = ""
+    if args.json:
+        fmt = "json"
+    elif args.xml:
+        fmt = "xml"
+    elif args.arkibas:
+        fmt = "arkibas"
+    else:
+        sys.exit("FEJL. Ikke-valid format: Vælg mellem 'json', 'xml' eller 'arkibas'")
+
     try:
         uuid.UUID(args.uuid)
     except ValueError:
@@ -422,47 +440,48 @@ def main() -> None:
     except Exception as e:
         sys.exit(f"FEJl. Kan ikke oprette destinationsmappen: {e}")
 
+
     # Fetch submission info
     try:
         # get_submission_info prints any errors with http or json-parsing
-        submission: Dict = get_submission_info(args.uuid)
+        submission: dict = get_submission_info(args.uuid)
     except HTTPException as e:
         sys.exit(e.args[0])
 
     # extract info on uploaded files
     try:
-        fileinfo: List[Dict] = extract_filelist(submission)
-    except ValueError:
-        sys.exit("FEJL. Afleveringen indeholder ingen filreferencer")
+        fileinfo: list[dict] = get_fileinfo(submission)
+    except ValueError as e:
+        sys.exit(e)
+    except Exception as e:
+        sys.exit(e)
 
     # download attached files
+    # files: filename and download-status
     try:
-        download_files(fileinfo, out_dir)
+        downloaded_files: list[dict] = download_files(fileinfo, out_dir)
     except Exception as e:
-        sys.exit(e.args[0])
+        sys.exit(e)
 
-    # update fileinfo
+    # update files
     hash = "md5" if args.md5 else "sha256"
-    updated_fileinfo = update_fileinfo(fileinfo, out_dir, hash)
+    updated_fileinfo = update_fileinfo(downloaded_files, out_dir, hash)
 
     # put together new submission-data
     submission = generate_submission_info(submission, updated_fileinfo)
-
-    # save submission to requested format
-    fmt: str = ""
-    if args.json:
-        fmt = "json"
-    elif args.xml:
-        fmt = "xml"
-    elif args.arkibas:
-        fmt = "arkibas"
-    else:
-        sys.exit(f"FEJL. {fmt} er ikke et valid format")
 
     # save submission data to file
     save_submission_info(submission, format=fmt, out_dir=out_dir)
 
     print("Færdig med at hente filer og metadata for afleveringen.\n", flush=True)
+
+    errors: list = [d["filename"] for d in downloaded_files if d["status"] not in ["ok", "existing"]]
+    existing: list = [d["filename"] for d in downloaded_files if d["status"] == "existing"]
+
+    if errors:
+        print(f"{len(errors)} file(s) were not downloaded due to errors.", flush=True)
+    if existing:
+        print(f"{len(existing)} file(s) were already in submission folder", flush= True)
 
 
 if __name__ == "__main__":
