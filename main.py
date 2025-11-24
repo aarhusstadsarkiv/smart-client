@@ -10,7 +10,7 @@ from http.client import HTTPException
 from pathlib import Path
 from typing import Any, Optional
 from xml.dom.minidom import parseString
-
+from datetime import datetime
 import httpx
 import dicttoxml
 from gooey import Gooey, GooeyParser
@@ -231,7 +231,7 @@ def get_submission_info(uuid: str) -> dict:
         return submission
 
 
-def extract_filelist(submission: dict) -> list[dict]:
+def get_fileinfo(submission: dict) -> list[dict]:
     """Extract and enhance 'files'-data from the submission"""
 
     files: list[dict] = []
@@ -265,7 +265,7 @@ def generate_submission_info(submission: dict, files: list[dict]) -> dict:
 
 
 def save_submission_info(submission: dict, format: str, out_dir: Path) -> None:
-    # Calculate filename
+
     if format == "arkibas":
         generate_arkibas_csvs(out_dir, submission)
         return
@@ -273,12 +273,12 @@ def save_submission_info(submission: dict, format: str, out_dir: Path) -> None:
     filepath = Path(out_dir, f"submission.{format}")
     # Test if filename already exists
     if filepath.exists():
+        filepath = Path(out_dir, f"submission_{datetime.now().strftime('%Y%m%dT%H%M%S')}.{format}")
         print(
-            "ADVARSEL. En metadatafil fra samme uuid"
-            " ligger allerede i mappen. Overskriver ikke.",
+            "\nADVARSEL. En metadatafil fra samme uuid"
+            " ligger allerede i mappen. Gemmer med timestamp appended.",
             flush=True,
         )
-        return
 
     with open(filepath, "w", encoding="utf-8") as f:
         if format == "json":
@@ -293,8 +293,8 @@ def save_submission_info(submission: dict, format: str, out_dir: Path) -> None:
             f.write(parseString(xml).toprettyxml())
 
 
-def download_files(files: list[dict], out_dir: Path) -> dict:
-    """Download all form-files
+def download_files(files: list[dict], out_dir: Path) -> list[dict]:
+    """Download all form-files and add status to fileinfo
 
     Given a filelist (extracted from the submission) and an out_dir, it
     tries to download all files attached to the submitted form to the out_dir.
@@ -307,72 +307,69 @@ def download_files(files: list[dict], out_dir: Path) -> dict:
         HTTPException: All non-200 status_codes are raised
     
     Returns:
-        dict of filename:status. Status can be [missing, existing, downloaded, error]
+        List of file-dicts. File-status can be [existing, missing, access_denied, ok, error, download_error]
     """
-
-    out: dict = {
-        "errors": [],
-        "downloaded": [],
-        "existing": [],
-        "missing": []
-    }
+    files_out: list[dict] = []
 
     with httpx.Client() as client:
         files_len: int = len(files)
         print(f"Henter {files_len} fil(er):", flush=True)
         for idx, d in enumerate(files, start=1):
-            filename = d["filename"]  # type: ignore
+            file: dict = d
+            filename = file["filename"]  # type: ignore
             filepath = Path(out_dir, filename)
-            if filepath.exists():
-                print(
-                    f"ADVARSEL. Denne fil ligger allerede i afleveringsmappen: {filename}",
-                    flush=True,
-                )
-                out["existing"].append(filename)
-                continue
 
             print(
-                f"{idx} af {files_len}: {filename} ({d.get('size')} bytes)...",
+                f"Henter {idx} af {files_len}: {filename} ({file.get('size')} bytes)...",
                 flush=True,
             )
 
+            if filepath.exists():
+                print("INFO. Filen ligger allerede i afleveringsmappen", flush=True)
+                file["status"] = "existing"
+                files_out.append(file)
+                continue
+
             r = client.get(d["url"], params={"api-key": os.getenv("API_KEY")})
+
             if r.status_code == 404:
                 print(
-                    f"FEJl. Afleveringen har ikke nogen vedhæftet fil med dette navn: {filename}",
+                    "FEJl. Afleveringen indeholder ingen fil med dette navn",
                     flush=True,
                 )
-                out["missing"].append(filename)
+                file["status"] = "missing"
+                files_out.append(file)
                 continue
 
             elif r.status_code in [401, 403]:
-                print(f"FEJl. Adgang nægtet med den brugte API-nøgle til: {r.url}", flush=True)
-                print("Denne fejl vil gentage sig for de resterende downloads, så jobbet afsluttes her.", flush=True)
-                print("Prøv igen senere eller kontakt stadsarkiv@aarhus.dk", flush=True)
-                sys.exit(1)
+                print("FEJl. Adgang til filen nægtet", flush=True)
+                file["status"] = "access_denied"
+                files_out.append(file)
+                continue
 
             elif str(r.status_code).startswith("5"):
-                print(
-                    "FEJl. Serveren har problemer. Prøv igen senere eller anmeld fejlen til stadsarkiv@aarhus.dk",
-                    flush=True
-                )
-                sys.exit(1)
+                print("FEJl. Serveren har problemer. Kan ikke hente filen", flush=True)
+                file["status"] = "error"
+                files_out.append(file)
+                continue
 
             try:
                 with open(filepath, "wb") as download:
                     download.write(r.content)
-                    out["downloaded"].append(filename)
+                file["status"] = "ok"
             except Exception as e:
                 print(
-                    f"FEJl. Der Kunne ikke hentes en fil på serveren med dette navn: {filename}. Status_code: {r.status_code} Fejl: {e}"
+                    f"FEJl. Kunne ikke downloade {filename}. Status_code: {r.status_code} Fejl: {e}"
                 )
-                out["errors"].append(filename)
+                file["status"] = "download_error"
 
-    return out
+            files_out.append(file)
+
+    return files_out
 
 
 def update_fileinfo(files: list[dict], out_dir: Path, algoritm: str) -> list[dict]:
-    """Adds checksum to and removes unnecessary metadata from each file"""
+    """Adds checksum if file is downloaded and remove unnecessary metadata from each file"""
     IGNORE_KEYS = ["url", "id"]
 
     def compute_hash(filepath: Path) -> str:
@@ -384,15 +381,17 @@ def update_fileinfo(files: list[dict], out_dir: Path, algoritm: str) -> list[dic
 
     out: list[dict] = []
     for file in files:
-        path = out_dir / file["filename"]
-        file["checksum"] = f"{algoritm}:{compute_hash(path)}"
+        if file.get("status") in ["ok", "existing"]:
+            path = out_dir / file["filename"]
+            file["checksum"] = f"{algoritm}:{compute_hash(path)}"
+
         new_file = {k: v for k, v in file.items() if k not in IGNORE_KEYS}
         out.append(new_file)
     return out
 
 
 @Gooey(
-    program_name="Smartarkivering, version 0.2.4",
+    program_name="Smartarkivering, version 0.2.5",
     # program_name="Smartarkivering",
     program_description="Klient til at hente afleveringer og filer fra smartarkivering.dk",
     default_size=(600, 700),
@@ -451,20 +450,22 @@ def main() -> None:
 
     # extract info on uploaded files
     try:
-        fileinfo: list[dict] = extract_filelist(submission)
+        fileinfo: list[dict] = get_fileinfo(submission)
     except ValueError as e:
+        sys.exit(e)
+    except Exception as e:
         sys.exit(e)
 
     # download attached files
-    file_status: list[dict] = []
+    # files: filename and download-status
     try:
-        file_status = download_files(fileinfo, out_dir)
+        downloaded_files: list[dict] = download_files(fileinfo, out_dir)
     except Exception as e:
-        sys.exit(e.args[0])
+        sys.exit(e)
 
-    # update fileinfo
+    # update files
     hash = "md5" if args.md5 else "sha256"
-    updated_fileinfo = update_fileinfo(fileinfo, out_dir, hash)
+    updated_fileinfo = update_fileinfo(downloaded_files, out_dir, hash)
 
     # put together new submission-data
     submission = generate_submission_info(submission, updated_fileinfo)
@@ -474,18 +475,13 @@ def main() -> None:
 
     print("Færdig med at hente filer og metadata for afleveringen.\n", flush=True)
 
-    for k, v in file_status.items():
-        if k == "existing" and v:
-            print("The following files already existed in the submission folder:", flush=True)
-            [print(url, flush=True) for url in v]
-        if k == "missing" and v:
-            print("The following files were registered in the submission, but missing on the server:", flush=True)
-            [print(url, flush=True) for url in v]
-        if k == "errors" and v:
-            print("The following files were not downloaded due to unspecified errors:", flush=True)
-            [print(url, flush=True) for url in v]
-        if k == "downloaded" and v:
-            print(f"len{v} of {len(fileinfo)} downloaded successfully", flush=True)
+    errors: list = [d["filename"] for d in downloaded_files if d["status"] not in ["ok", "existing"]]
+    existing: list = [d["filename"] for d in downloaded_files if d["status"] == "existing"]
+
+    if errors:
+        print(f"{len(errors)} file(s) were not downloaded due to errors.", flush=True)
+    if existing:
+        print(f"{len(existing)} file(s) were already in submission folder", flush= True)
 
 
 if __name__ == "__main__":
