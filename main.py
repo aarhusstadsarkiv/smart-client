@@ -251,6 +251,8 @@ def get_fileinfo(submission: dict) -> list[dict]:
 def generate_submission_info(submission: dict, files: list[dict]) -> dict:
     out: dict = {}
     prefix: str = os.getenv("ARCHIVE_PREFIX", "").lower()
+    if submission["data"].get("mgp_navn") is not None:
+        prefix = "mgp"
     for k, v in submission["data"].items():
         if not v:
             continue
