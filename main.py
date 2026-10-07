@@ -259,7 +259,8 @@ def generate_submission_info(submission: dict, files: list[dict]) -> dict:
         if k.startswith(prefix):
             out[k[4:]] = v
         elif k in ADDITIONAL_FIELDS:
-            out[k] = v
+            if k not in submission["data"]:
+                out[k] = v
 
     out["files"] = files
     # out["completed"] = submission.get("completed")
