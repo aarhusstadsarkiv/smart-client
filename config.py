@@ -2,7 +2,7 @@ import os
 import json
 from pathlib import Path
 
-CONFIG_FILE = Path.home() / ".smartarkivering" / "config.json"
+# CONFIG_FILE = Path.home() / ".smartarkivering" / "config.json"
 
 REQUIRED_CONFIG_KEYS = [
     "api_key",
