@@ -144,6 +144,7 @@ def setup_parser() -> argparse.ArgumentParser:
     cli.add_argument(
         "--hash",
         action="store_true",
+        choices=['md5', 'sha',]
         help="Checksum-algoritme of downloaded files"
     )
 
