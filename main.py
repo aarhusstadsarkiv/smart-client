@@ -108,15 +108,15 @@ def default_value(field: str, value: Optional[str]) -> int:
     return 0
 
 
-def setup_parser() -> Any:
+def setup_parser() -> argparse.ArgumentParser:
+    cli = argparse.ArgumentParser()
     cli.add_argument(
         "uuid",
         metavar="UUID",
-        help=("Unik id for afleveringen. Eks.: dbd9bcb8-8110-4a10-9fe7-d12d9ca9f09d"),
-        gooey_options={"full_width": True},
+        help=("Unik id for afleveringen. Eks.: dbd9bcb8-8110-4a10-9fe7-d12d9ca9f09d")
     )
     cli.add_argument(
-        "destination",
+        "--destination",
         metavar="Destination",
         help=(
             "Sti til rodmappen, hvor afleveringen skal gemmes.\n\n"
@@ -124,67 +124,21 @@ def setup_parser() -> Any:
             " navngivet efter afleveringens UUID. Allerede eksisterende filer og/eller "
             "afleveringsformular bliver ikke overskrevet.\n"
         ),
-        widget="DirChooser",
         type=Path,
         default=os.getenv("DEFAULT_DESTINATION")
         or str(Path(Path.home(), "Downloads", "Smartarkivering")),
-        gooey_options={
-            "default_path": os.getenv("DEFAULT_DESTINATION")
-            or str(Path(Path.home(), "Downloads", "Smartarkivering")),
-            "full_width": True,
-        },
+
     )
-    format_chooser = cli.add_mutually_exclusive_group(
-        required=True,
-        gooey_options={
-            "title": "Metadata format",
-            "show_border": True,
-            "initial_selection": default_value("format", os.getenv("DEFAULT_FORMAT")),
-        },
-    )
-    format_chooser.add_argument(
-        "--json",
-        dest="json",
+    cli.add_argument(
+        "--format",
         action="store_true",
-        help="Gem metadata i json-fil",
-        gooey_options={"full_width": False},
-    )
-    format_chooser.add_argument(
-        "--xml",
-        dest="xml",
-        action="store_true",
-        help="Gem metadata i xml-fil",
-        gooey_options={"full_width": False},
-    )
-    format_chooser.add_argument(
-        "--arkibas",
-        dest="arkibas",
-        action="store_true",
-        help="Gem metadata i arkibas csv-format",
-        gooey_options={"full_width": False},
+        help="Gem metadata i json-fil"
     )
 
-    hash_chooser = cli.add_mutually_exclusive_group(
-        required=True,
-        gooey_options={
-            "title": "Checksum",
-            "show_border": True,
-            "initial_selection": 0 if os.getenv("DEFAULT_HASH") == "md5" else 1,
-        },
-    )
-    hash_chooser.add_argument(
-        "--md5",
-        dest="md5",
+    cli.add_argument(
+        "--hash",
         action="store_true",
-        help="Generate MD5 checksum of downloaded files",
-        gooey_options={"full_width": False},
-    )
-    hash_chooser.add_argument(
-        "--sha256",
-        dest="sha256",
-        action="store_true",
-        help="Generate SHA256 checksum of downloaded files",
-        gooey_options={"full_width": False},
+        help="Generate MD5 checksum of downloaded files"
     )
 
     args = cli.parse_args()
@@ -409,8 +363,8 @@ def update_fileinfo(files: list[dict], out_dir: Path, algoritm: str) -> list[dic
 def main() -> None:
 
     # Setup parser
-    cli: GooeyParser = GooeyParser(description="Smartarkivering")
-    args = setup_parser(cli)
+    parser = setup_parser()
+    args = parser.parse_args()
 
     # Load config or print error in gooey-field and exit
     try:
