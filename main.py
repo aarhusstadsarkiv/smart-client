@@ -120,7 +120,7 @@ def setup_parser() -> argparse.ArgumentParser:
         "--config",
         metavar="Konfigurationsfil",
         type=Path,
-        help"Sti til konfigurationsfilen"
+        help="Sti til konfigurationsfilen"
     )
 
     cli.add_argument(
@@ -144,8 +144,8 @@ def setup_parser() -> argparse.ArgumentParser:
     cli.add_argument(
         "--hash",
         action="store_true",
-        choices=['md5', 'sha',]
-        help="Checksum-algoritme of downloaded files"
+        choices=['md5', 'sha'],
+        help="Checksum-algoritme til validering af filer"
     )
 
     args = cli.parse_args()
