@@ -136,14 +136,12 @@ def setup_parser() -> argparse.ArgumentParser:
     )
     cli.add_argument(
         "--format",
-        action="store_true",
         choices=['xml', 'json', 'arkibas'],
         help="Filformat for formular-data"
     )
 
     cli.add_argument(
         "--hash",
-        action="store_true",
         choices=['md5', 'sha'],
         help="Checksum-algoritme til validering af filer"
     )
