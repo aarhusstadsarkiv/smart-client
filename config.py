@@ -40,7 +40,7 @@ def load_configuration(conf_path: Path = None) -> None:
                 raise ValueError(
                     f"FEJL. Mangler følgende påkrævede konfigurationsnøgle: {key}"
                 )
-            os.environ[key.upper()] = config[key]
+            os.environ["AFLEVERING_" + key.upper()] = config[key]
 
             # for k, v in config.items():
             #     if k.lower() in REQUIRED_CONFIG_KEYS:
