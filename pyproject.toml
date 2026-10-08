@@ -15,6 +15,9 @@ dependencies = [
     "six>=1.17.0",
 ]
 
+[project.scripts]
+aflevering = "app:main"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
