@@ -115,6 +115,14 @@ def setup_parser() -> argparse.ArgumentParser:
         metavar="UUID",
         help=("Unik id for afleveringen. Eks.: dbd9bcb8-8110-4a10-9fe7-d12d9ca9f09d")
     )
+
+    cli.add_argument(
+        "--config",
+        metavar="Konfigurationsfil",
+        type=Path,
+        help"Sti til konfigurationsfilen"
+    )
+
     cli.add_argument(
         "--destination",
         metavar="Destination",
