@@ -1,56 +1,57 @@
 import os
+import argparse
 import csv
 import sys
-import locale
+# import locale
 import hashlib
 import json
 import urllib.parse
 import uuid
 from http.client import HTTPException
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 from xml.dom.minidom import parseString
 from datetime import datetime
+
 import httpx
 import dicttoxml
-from gooey import Gooey, GooeyParser
+# from gooey import Gooey, GooeyParser
 
 import config as config
 
-
+ENV_PREFIX = "AFLEVERING"
 ADDITIONAL_FIELDS: list = ["navn", "email", "telefon"]
 
-ARKIBAS_JOURNAL_COLS: list = [
-    "JournalAar",
-    "JournalNr",
-    "ModtagetAf",
-    "ModtagetDato",
-    "Aftale",
-    "Klausul",
-    "Klausulbeskrivelse",
-    "Bemærkning",
-    "Stikord",
-    "Giver1Navn",
-    "Giver1Adresse",
-    "Giver1Postnummer",
-    "Giver1By",
-    "Giver1Telefon",
-    "Giver1Email",
-    "Giver1Bemærkninger",
-]
-
-ARKIBAS_CONTENT_COLS: list = [
-    "Journalnummer",
-    "Indhold",
-    "Råderet",
-    "Mængde",
-    "Placering",
-    "Note",
-    "Filnavn",
-]
 
 
-def generate_arkibas_csvs(dir_path: Path, submission: dict) -> None:
+def _generate_arkibas_csvs(dir_path: Path, submission: dict) -> None:
+    ARKIBAS_JOURNAL_COLS: list = [
+        "JournalAar",
+        "JournalNr",
+        "ModtagetAf",
+        "ModtagetDato",
+        "Aftale",
+        "Klausul",
+        "Klausulbeskrivelse",
+        "Bemærkning",
+        "Stikord",
+        "Giver1Navn",
+        "Giver1Adresse",
+        "Giver1Postnummer",
+        "Giver1By",
+        "Giver1Telefon",
+        "Giver1Email",
+        "Giver1Bemærkninger",
+    ]
+    ARKIBAS_CONTENT_COLS: list = [
+        "Journalnummer",
+        "Indhold",
+        "Råderet",
+        "Mængde",
+        "Placering",
+        "Note",
+        "Filnavn",
+    ]
     journal_path: Path = dir_path / "journal.csv"
     content_path: Path = dir_path / "indhold.csv"
 
@@ -95,99 +96,75 @@ def generate_arkibas_csvs(dir_path: Path, submission: dict) -> None:
             )
 
 
-def default_value(field: str, value: Optional[str]) -> int:
-    if field == "format":
-        if value:
-            if value == "json":
-                return 0
-            elif value == "xml":
-                return 1
-            elif value == "arkibas":
-                return 2
-    return 0
+# def default_value(field: str, value: Optional[str]) -> int:
+#     if field == "format":
+#         if value:
+#             if value == "json":
+#                 return 0
+#             elif value == "xml":
+#                 return 1
+#             elif value == "arkibas":
+#                 return 2
+#     return 0
 
 
-def setup_parser(cli: GooeyParser) -> Any:
+def setup_parser()-> argparse.ArgumentParser:
+    cli = argparse.ArgumentParser(
+        description="""
+Henter filer og metadata fra afleveringer foretaget gennem Smartarkivering.
+
+Afleveringens uuid skal angives, mens alle options (--...) defaulter til værdien i konfigurationsfilen.
+
+Eksempel:
+'$ aflevering --format json --hash sha dbd9bcb8-8110-4a10-9fe7-d12d9ca9f09d'
+        """,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    # cli = argparse.ArgumentParser()
     cli.add_argument(
         "uuid",
         metavar="UUID",
-        help=("Unik id for afleveringen. Eks.: dbd9bcb8-8110-4a10-9fe7-d12d9ca9f09d"),
-        gooey_options={"full_width": True},
+        help=("Unik id for afleveringen. Eks.: dbd9bcb8-8110-4a10-9fe7-d12d9ca9f09d")
     )
+
     cli.add_argument(
-        "destination",
+        "--config",
+        metavar="Konfigurationsfil",
+        type=Path,
+        help="Sti til konfigurationsfilen"
+    )
+
+    cli.add_argument(
+        "--destination",
         metavar="Destination",
+        type=Path,
         help=(
             "Sti til rodmappen, hvor afleveringen skal gemmes.\n\n"
             "Hver aflevering, inkl. filer, bliver placeret i en undermappe til rodmappen,"
             " navngivet efter afleveringens UUID. Allerede eksisterende filer og/eller "
             "afleveringsformular bliver ikke overskrevet.\n"
-        ),
-        widget="DirChooser",
-        type=Path,
-        default=os.getenv("DEFAULT_DESTINATION")
-        or str(Path(Path.home(), "Downloads", "Smartarkivering")),
-        gooey_options={
-            "default_path": os.getenv("DEFAULT_DESTINATION")
-            or str(Path(Path.home(), "Downloads", "Smartarkivering")),
-            "full_width": True,
-        },
+        )
     )
-    format_chooser = cli.add_mutually_exclusive_group(
-        required=True,
-        gooey_options={
-            "title": "Metadata format",
-            "show_border": True,
-            "initial_selection": default_value("format", os.getenv("DEFAULT_FORMAT")),
-        },
-    )
-    format_chooser.add_argument(
-        "--json",
-        dest="json",
-        action="store_true",
-        help="Gem metadata i json-fil",
-        gooey_options={"full_width": False},
-    )
-    format_chooser.add_argument(
-        "--xml",
-        dest="xml",
-        action="store_true",
-        help="Gem metadata i xml-fil",
-        gooey_options={"full_width": False},
-    )
-    format_chooser.add_argument(
-        "--arkibas",
-        dest="arkibas",
-        action="store_true",
-        help="Gem metadata i arkibas csv-format",
-        gooey_options={"full_width": False},
+    cli.add_argument(
+        "--format",
+        choices=['xml', 'json', 'arkibas'],
+        help="Filformat for formular-data"
     )
 
-    hash_chooser = cli.add_mutually_exclusive_group(
-        required=True,
-        gooey_options={
-            "title": "Checksum",
-            "show_border": True,
-            "initial_selection": 0 if os.getenv("DEFAULT_HASH") == "md5" else 1,
-        },
-    )
-    hash_chooser.add_argument(
-        "--md5",
-        dest="md5",
-        action="store_true",
-        help="Generate MD5 checksum of downloaded files",
-        gooey_options={"full_width": False},
-    )
-    hash_chooser.add_argument(
-        "--sha256",
-        dest="sha256",
-        action="store_true",
-        help="Generate SHA256 checksum of downloaded files",
-        gooey_options={"full_width": False},
+    cli.add_argument(
+        "--hash",
+        choices=['md5', 'sha'],
+        help="Checksum-algoritme til validering af filer"
     )
 
-    args = cli.parse_args()
-    return args
+    cli.add_argument(
+        "--form",
+        choices=['aar', 'aal', 'kol', 'ran', 'mgp'],
+        help="Hvilken formular skal hentes ('aar', 'mgp',...)"
+    )
+
+    return cli
 
 
 def get_submission_info(uuid: str) -> dict:
@@ -211,9 +188,10 @@ def get_submission_info(uuid: str) -> dict:
 
     with httpx.Client() as client:
         print(f"Henter afleveringsformular med uuid: {uuid}", flush=True)
-        r = client.get(
-            f"{os.getenv('SUBMISSION_URL')}/{uuid}?api-key={os.getenv('API_KEY')}"
-        )
+        url = os.getenv(f"{ENV_PREFIX}_SUBMISSION_URL")
+        api_key = os.getenv(f"{ENV_PREFIX}_API_KEY")
+        r = client.get(f"{url}/{uuid}?api-key={api_key}")
+
         if r.status_code == 404:
             raise HTTPException(
                 f"FEJl. Der findes ingen aflevering med dette uuid: {uuid}"
@@ -248,15 +226,15 @@ def get_fileinfo(submission: dict) -> list[dict]:
     return files
 
 
-def generate_submission_info(submission: dict, files: list[dict]) -> dict:
+def generate_submission_info(slug: str, submission: dict, files: list[dict]) -> dict:
     out: dict = {}
-    prefix: str = os.getenv("ARCHIVE_PREFIX", "").lower()
-    if submission["data"].get("mgp_navn") is not None:
-        prefix = "mgp"
+    # prefix: str = os.getenv(f"{ENV_PREFIX}_ARCHIVE_PREFIX", "").lower()
+    # if submission["data"].get("mgp_navn") is not None:
+    #     prefix = "mgp"
     for k, v in submission["data"].items():
         if not v:
             continue
-        if k.startswith(prefix):
+        if k.startswith(slug):
             out[k[4:]] = v
         elif k in ADDITIONAL_FIELDS:
             if k not in submission["data"]:
@@ -270,7 +248,7 @@ def generate_submission_info(submission: dict, files: list[dict]) -> dict:
 def save_submission_info(submission: dict, format: str, out_dir: Path) -> None:
 
     if format == "arkibas":
-        generate_arkibas_csvs(out_dir, submission)
+        _generate_arkibas_csvs(out_dir, submission)
         return
 
     filepath = Path(out_dir, f"submission.{format}")
@@ -333,7 +311,7 @@ def download_files(files: list[dict], out_dir: Path) -> list[dict]:
                 files_out.append(file)
                 continue
 
-            r = client.get(d["url"], params={"api-key": os.getenv("API_KEY")})
+            r = client.get(d["url"], params={"api-key": os.getenv(f"{ENV_PREFIX}_API_KEY")})
 
             if r.status_code == 404:
                 print(
@@ -393,56 +371,49 @@ def update_fileinfo(files: list[dict], out_dir: Path, algoritm: str) -> list[dic
     return out
 
 
-@Gooey(
-    program_name="Smartarkivering, version 0.2.5",
-    # program_name="Smartarkivering",
-    program_description="Klient til at hente afleveringer og filer fra smartarkivering.dk",
-    default_size=(600, 700),
-    # https://github.com/chriskiehl/Gooey/issues/520#issuecomment-576155188
-    # necessary for pyinstaller to work in --windowed mode (no console)
-    encoding=locale.getpreferredencoding(),
-    show_restart_button=False,
-    show_failure_modal=False,
-    show_success_modal=False,
-)
 def main() -> None:
+
     # Setup parser
-    cli: GooeyParser = GooeyParser(description="Smartarkivering")
-    args = setup_parser(cli)
+    parser = setup_parser()
+    args = parser.parse_args()
 
-    # Load config or print error in gooey-field and exit
+    # Load config
     try:
-        config.load_configuration()
-    except FileNotFoundError:
-        sys.exit(f"FEJL. Konfigurationsfilen findes ikke her:\n {Path.home() / '.smartarkivering' / 'config.json'}")
-    except ValueError:
-        sys.exit("FEJL. Konfigurationsfilen kan ikke parses som valid json")
+        config.load_configuration(args.config)
+    except FileNotFoundError as fe:
+        sys.exit(fe)
+    except ValueError as ve:
+        sys.exit(ve)
 
-    # Validate arguments
-    fmt: str = ""
-    if args.json:
-        fmt = "json"
-    elif args.xml:
-        fmt = "xml"
-    elif args.arkibas:
-        fmt = "arkibas"
-    else:
-        sys.exit("FEJL. Ikke-valid format: Vælg mellem 'json', 'xml' eller 'arkibas'")
-
+    # Parse cli command
+    # UUID
+    if not args.uuid:
+        sys.exit("FEJL. Mangler afleveringens UUID.")
     try:
         uuid.UUID(args.uuid)
     except ValueError:
         sys.exit("FEJL. Det indtastede uuid har ikke det korrekte format.")
 
-    if not Path(args.destination).is_dir():
-        sys.exit("FEJL. Destinationen skal være en eksisterende mappe.")
+    # --destination
+    if args.destination and not Path(args.destination).is_dir():
+        sys.exit(f"FEJL. Destinationen skal være en eksisterende mappe: {args.destination}")
+    destination: Path = args.destination or os.getenv(f"{ENV_PREFIX}_DEFAULT_DESTINATION")
 
-    out_dir = Path(args.destination, args.uuid)
+    # --format
+    format: str = args.format or os.getenv(f"{ENV_PREFIX}_DEFAULT_FORMAT")
+
+    # --hash
+    hash: str = args.hash or os.getenv(f"{ENV_PREFIX}_DEFAULT_HASH")
+
+    # --form (kaldet 'slug' i kildekoden)
+    slug: str = args.form or os.getenv(f"{ENV_PREFIX}_ARCHIVE_PREFIX")
+
+    # Create output-dir
+    out_dir = Path(destination, args.uuid)
     try:
         out_dir.mkdir(parents=True, exist_ok=True)
     except Exception as e:
-        sys.exit(f"FEJl. Kan ikke oprette destinationsmappen: {e}")
-
+        sys.exit(e)
 
     # Fetch submission info
     try:
@@ -467,14 +438,13 @@ def main() -> None:
         sys.exit(e)
 
     # update files
-    hash = "md5" if args.md5 else "sha256"
     updated_fileinfo = update_fileinfo(downloaded_files, out_dir, hash)
 
     # put together new submission-data
-    submission = generate_submission_info(submission, updated_fileinfo)
+    submission = generate_submission_info(slug, submission, updated_fileinfo)
 
     # save submission data to file
-    save_submission_info(submission, format=fmt, out_dir=out_dir)
+    save_submission_info(submission, format=format, out_dir=out_dir)
 
     print("Færdig med at hente filer og metadata for afleveringen.\n", flush=True)
 
