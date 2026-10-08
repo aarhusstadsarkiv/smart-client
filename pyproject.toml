@@ -9,7 +9,6 @@ requires-python = ">=3.10"
 readme = "README.md"
 dependencies = [
     "dicttoxml>=1.7.16",
-    "gooey>=1.0.8.1",
     "httpx>=0.28.1",
     "pyinstaller>=6.16.0",
     "six>=1.17.0",
