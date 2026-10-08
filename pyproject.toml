@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [project.scripts]
-aflevering = "app:main"
+aflevering = "smart_client.app:main"
 
 [build-system]
 requires = ["hatchling"]
