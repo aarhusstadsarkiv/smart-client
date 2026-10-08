@@ -118,27 +118,25 @@ def setup_parser() -> argparse.ArgumentParser:
     cli.add_argument(
         "--destination",
         metavar="Destination",
+        type=Path,
         help=(
             "Sti til rodmappen, hvor afleveringen skal gemmes.\n\n"
             "Hver aflevering, inkl. filer, bliver placeret i en undermappe til rodmappen,"
             " navngivet efter afleveringens UUID. Allerede eksisterende filer og/eller "
             "afleveringsformular bliver ikke overskrevet.\n"
-        ),
-        type=Path,
-        default=os.getenv("DEFAULT_DESTINATION")
-        or str(Path(Path.home(), "Downloads", "Smartarkivering")),
-
+        )
     )
     cli.add_argument(
         "--format",
         action="store_true",
-        help="Gem metadata i json-fil"
+        choices=['xml', 'json', 'arkibas'],
+        help="Filformat for formular-data"
     )
 
     cli.add_argument(
         "--hash",
         action="store_true",
-        help="Generate MD5 checksum of downloaded files"
+        help="Checksum-algoritme of downloaded files"
     )
 
     args = cli.parse_args()
