@@ -2,7 +2,7 @@ import os
 import argparse
 import csv
 import sys
-import locale
+# import locale
 import hashlib
 import json
 import urllib.parse
@@ -12,9 +12,10 @@ from pathlib import Path
 from typing import Optional
 from xml.dom.minidom import parseString
 from datetime import datetime
+
 import httpx
 import dicttoxml
-from gooey import Gooey, GooeyParser
+# from gooey import Gooey, GooeyParser
 
 import config as config
 
