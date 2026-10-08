@@ -9,7 +9,7 @@ import urllib.parse
 import uuid
 from http.client import HTTPException
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 from xml.dom.minidom import parseString
 from datetime import datetime
 import httpx
@@ -94,16 +94,16 @@ def generate_arkibas_csvs(dir_path: Path, submission: dict) -> None:
             )
 
 
-def default_value(field: str, value: Optional[str]) -> int:
-    if field == "format":
-        if value:
-            if value == "json":
-                return 0
-            elif value == "xml":
-                return 1
-            elif value == "arkibas":
-                return 2
-    return 0
+# def default_value(field: str, value: Optional[str]) -> int:
+#     if field == "format":
+#         if value:
+#             if value == "json":
+#                 return 0
+#             elif value == "xml":
+#                 return 1
+#             elif value == "arkibas":
+#                 return 2
+#     return 0
 
 
 def setup_parser() -> argparse.ArgumentParser:
@@ -379,19 +379,18 @@ def main() -> None:
         sys.exit(f"FEJL. Destinationen skal være en eksisterende mappe: {args.destination}")
     destination: Path = args.destination or os.getenv(f"{ENV_PREFIX}_DEFAULT_DESTINATION")
 
-    # create output-dir
-    out_dir = Path(destination, args.uuid)
-    try:
-        out_dir.mkdir(parents=True, exist_ok=True)
-    except Exception as e:
-        sys.exit(e)
-
     # --format
     format: str = args.format or os.getenv(f"{ENV_PREFIX}_DEFAULT_FORMAT")
 
     # --hash
     hash: str = args.hash or os.getenv(f"{ENV_PREFIX}_DEFAULT_HASH")
 
+    # Create output-dir
+    out_dir = Path(destination, args.uuid)
+    try:
+        out_dir.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        sys.exit(e)
 
     # Fetch submission info
     try:
