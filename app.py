@@ -18,9 +18,8 @@ from gooey import Gooey, GooeyParser
 
 import config as config
 
-
+ENV_PREFIX = "AFLEVERING"
 ADDITIONAL_FIELDS: list = ["navn", "email", "telefon"]
-
 ARKIBAS_JOURNAL_COLS: list = [
     "JournalAar",
     "JournalNr",
@@ -39,7 +38,6 @@ ARKIBAS_JOURNAL_COLS: list = [
     "Giver1Email",
     "Giver1Bemærkninger",
 ]
-
 ARKIBAS_CONTENT_COLS: list = [
     "Journalnummer",
     "Indhold",
@@ -367,26 +365,21 @@ def main() -> None:
     except ValueError as ve:
         sys.exit(ve)
 
-    # Validate arguments
-    fmt: str = ""
-    if args.json:
-        fmt = "json"
-    elif args.xml:
-        fmt = "xml"
-    elif args.arkibas:
-        fmt = "arkibas"
-    else:
-        sys.exit("FEJL. Ikke-valid format: Vælg mellem 'json', 'xml' eller 'arkibas'")
-
+    # Validate cli command
+    if not args.uuid:
+        sys.exit("FEJL. Mangler afleveringens UUID.")
     try:
         uuid.UUID(args.uuid)
     except ValueError:
         sys.exit("FEJL. Det indtastede uuid har ikke det korrekte format.")
 
-    if not Path(args.destination).is_dir():
-        sys.exit("FEJL. Destinationen skal være en eksisterende mappe.")
+    destination: Path = os.getenv(f"{ENV_PREFIX}_DEFAULT_DESTINATION")
+    if args.destination:
+        if not Path(args.destination).is_dir():
+            sys.exit(f"FEJL. Destinationen skal være en eksisterende mappe: {args.destination}")
 
     out_dir = Path(args.destination, args.uuid)
+
     try:
         out_dir.mkdir(parents=True, exist_ok=True)
     except Exception as e:
