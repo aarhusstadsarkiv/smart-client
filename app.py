@@ -366,6 +366,7 @@ def main() -> None:
         sys.exit(ve)
 
     # Validate cli command
+    # UUID
     if not args.uuid:
         sys.exit("FEJL. Mangler afleveringens UUID.")
     try:
@@ -373,6 +374,7 @@ def main() -> None:
     except ValueError:
         sys.exit("FEJL. Det indtastede uuid har ikke det korrekte format.")
 
+    # --destination
     destination: Path = os.getenv(f"{ENV_PREFIX}_DEFAULT_DESTINATION")
     if args.destination:
         if not Path(args.destination).is_dir():
@@ -384,6 +386,12 @@ def main() -> None:
         out_dir.mkdir(parents=True, exist_ok=True)
     except Exception as e:
         sys.exit(f"FEJl. Kan ikke oprette destinationsmappen: {e}")
+
+    # --format
+    format: str = args.format or os.getenv(f"{ENV_PREFIX}_DEFAULT_FORMAT")
+
+    # --hash
+    hash: str = args.hash or os.getenv(f"{ENV_PREFIX}_DEFAULT_HASH")
 
 
     # Fetch submission info
