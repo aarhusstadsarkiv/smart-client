@@ -117,7 +117,8 @@ def setup_parser() -> argparse.ArgumentParser:
         
         Eksempel:
         '$ aflevering --format json --hash sha dbd9bcb8-8110-4a10-9fe7-d12d9ca9f09d'
-        """
+        """,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     cli.add_argument(
         "uuid",
