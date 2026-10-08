@@ -357,7 +357,7 @@ def main() -> None:
     parser = setup_parser()
     args = parser.parse_args()
 
-    # Load config or print error in gooey-field and exit
+    # Load config
     try:
         config.load_configuration(args.config)
     except FileNotFoundError as fe:
@@ -365,7 +365,7 @@ def main() -> None:
     except ValueError as ve:
         sys.exit(ve)
 
-    # Validate cli command
+    # Parse cli command
     # UUID
     if not args.uuid:
         sys.exit("FEJL. Mangler afleveringens UUID.")
@@ -375,17 +375,16 @@ def main() -> None:
         sys.exit("FEJL. Det indtastede uuid har ikke det korrekte format.")
 
     # --destination
-    destination: Path = os.getenv(f"{ENV_PREFIX}_DEFAULT_DESTINATION")
-    if args.destination:
-        if not Path(args.destination).is_dir():
-            sys.exit(f"FEJL. Destinationen skal være en eksisterende mappe: {args.destination}")
+    if args.destination and not Path(args.destination).is_dir():
+        sys.exit(f"FEJL. Destinationen skal være en eksisterende mappe: {args.destination}")
+    destination: Path = args.destination or os.getenv(f"{ENV_PREFIX}_DEFAULT_DESTINATION")
 
-    out_dir = Path(args.destination, args.uuid)
-
+    # create output-dir
+    out_dir = Path(destination, args.uuid)
     try:
         out_dir.mkdir(parents=True, exist_ok=True)
     except Exception as e:
-        sys.exit(f"FEJl. Kan ikke oprette destinationsmappen: {e}")
+        sys.exit(e)
 
     # --format
     format: str = args.format or os.getenv(f"{ENV_PREFIX}_DEFAULT_FORMAT")
