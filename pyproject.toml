@@ -1,6 +1,6 @@
 [project]
 name = "smart-client"
-version = "0.3.0"
+version = "0.3.1"
 description = "Commandline klient til Smartarkivering.dk-afleveringer"
 authors = [
     {name="Claus Juhl Knudsen", email="cjk@aarhus.dk"}

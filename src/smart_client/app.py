@@ -15,13 +15,11 @@ from datetime import datetime
 
 import httpx
 import dicttoxml
-# from gooey import Gooey, GooeyParser
 
-import config as config
+import smart_client.config as config
 
 ENV_PREFIX = "AFLEVERING"
 ADDITIONAL_FIELDS: list = ["navn", "email", "telefon"]
-
 
 
 def _generate_arkibas_csvs(dir_path: Path, submission: dict) -> None:
@@ -96,48 +94,36 @@ def _generate_arkibas_csvs(dir_path: Path, submission: dict) -> None:
             )
 
 
-# def default_value(field: str, value: Optional[str]) -> int:
-#     if field == "format":
-#         if value:
-#             if value == "json":
-#                 return 0
-#             elif value == "xml":
-#                 return 1
-#             elif value == "arkibas":
-#                 return 2
-#     return 0
-
-
 def setup_parser()-> argparse.ArgumentParser:
     cli = argparse.ArgumentParser(
         description="""
 Henter filer og metadata fra afleveringer foretaget gennem Smartarkivering.
 
-Afleveringens uuid skal angives, mens alle options (--...) defaulter til værdien i konfigurationsfilen.
+Afleveringens uuid skal angives, mens alle options (--...) defaulter til værdien i
+konfigurationsfilen, hvis de ikke bliver sat.
 
 Eksempel:
-'$ aflevering --format json --hash sha dbd9bcb8-8110-4a10-9fe7-d12d9ca9f09d'
+'$ aflevering --format json --hash sha256 d9bcb8-8110-4a10-9fe7-d12d9ca9f09d'
         """,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    # cli = argparse.ArgumentParser()
     cli.add_argument(
         "uuid",
-        metavar="UUID",
+        # metavar="UUID",
         help=("Unik id for afleveringen. Eks.: dbd9bcb8-8110-4a10-9fe7-d12d9ca9f09d")
     )
 
     cli.add_argument(
         "--config",
-        metavar="Konfigurationsfil",
+        # metavar="Konfigurationsfil",
         type=Path,
         help="Sti til konfigurationsfilen"
     )
 
     cli.add_argument(
         "--destination",
-        metavar="Destination",
+        # metavar="Destination",
         type=Path,
         help=(
             "Sti til rodmappen, hvor afleveringen skal gemmes.\n\n"
@@ -149,12 +135,12 @@ Eksempel:
     cli.add_argument(
         "--format",
         choices=['xml', 'json', 'arkibas'],
-        help="Filformat for formular-data"
+        help="Filformat til formular metadata"
     )
 
     cli.add_argument(
         "--hash",
-        choices=['md5', 'sha'],
+        choices=['md5', 'sha256 '],
         help="Checksum-algoritme til validering af filer"
     )
 
@@ -228,9 +214,6 @@ def get_fileinfo(submission: dict) -> list[dict]:
 
 def generate_submission_info(slug: str, submission: dict, files: list[dict]) -> dict:
     out: dict = {}
-    # prefix: str = os.getenv(f"{ENV_PREFIX}_ARCHIVE_PREFIX", "").lower()
-    # if submission["data"].get("mgp_navn") is not None:
-    #     prefix = "mgp"
     for k, v in submission["data"].items():
         if not v:
             continue
@@ -459,5 +442,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-    # loop = asyncio.get_event_loop()
-    # loop.run_until_complete(main())
