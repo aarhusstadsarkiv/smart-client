@@ -416,14 +416,13 @@ def main() -> None:
         sys.exit(e)
 
     # update files
-    hash = "md5" if args.md5 else "sha256"
     updated_fileinfo = update_fileinfo(downloaded_files, out_dir, hash)
 
     # put together new submission-data
     submission = generate_submission_info(submission, updated_fileinfo)
 
     # save submission data to file
-    save_submission_info(submission, format=fmt, out_dir=out_dir)
+    save_submission_info(submission, format=format, out_dir=out_dir)
 
     print("Færdig med at hente filer og metadata for afleveringen.\n", flush=True)
 
