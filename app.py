@@ -353,18 +353,6 @@ def update_fileinfo(files: list[dict], out_dir: Path, algoritm: str) -> list[dic
     return out
 
 
-# @Gooey(
-#     program_name="Smartarkivering, version 0.2.5",
-#     # program_name="Smartarkivering",
-#     program_description="Klient til at hente afleveringer og filer fra smartarkivering.dk",
-#     default_size=(600, 700),
-#     # https://github.com/chriskiehl/Gooey/issues/520#issuecomment-576155188
-#     # necessary for pyinstaller to work in --windowed mode (no console)
-#     encoding=locale.getpreferredencoding(),
-#     show_restart_button=False,
-#     show_failure_modal=False,
-#     show_success_modal=False,
-# )
 def main() -> None:
 
     # Setup parser
