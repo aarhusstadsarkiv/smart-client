@@ -362,10 +362,10 @@ def main() -> None:
     # Load config or print error in gooey-field and exit
     try:
         config.load_configuration(args.config)
-    except FileNotFoundError:
-        sys.exit(f"FEJL. Konfigurationsfilen findes ikke her:\n {Path.home() / '.smartarkivering' / 'config.json'}")
-    except ValueError:
-        sys.exit("FEJL. Konfigurationsfilen kan ikke parses som valid json")
+    except FileNotFoundError as fe:
+        sys.exit(fe)
+    except ValueError as ve:
+        sys.exit(ve)
 
     # Validate arguments
     fmt: str = ""
