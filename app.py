@@ -441,7 +441,7 @@ def main() -> None:
     updated_fileinfo = update_fileinfo(downloaded_files, out_dir, hash)
 
     # put together new submission-data
-    submission = generate_submission_info(submission, updated_fileinfo)
+    submission = generate_submission_info(slug, submission, updated_fileinfo)
 
     # save submission data to file
     save_submission_info(submission, format=format, out_dir=out_dir)
