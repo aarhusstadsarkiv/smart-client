@@ -14,13 +14,15 @@ REQUIRED_CONFIG_KEYS = [
 ]
 
 
-def load_configuration() -> None:
-    """Loads all required CONFIG_KEYS if found in {Home}/.smartarkivering/config.json
-    into envvars
-    """
+def load_configuration(conf_path: Path = None) -> None:
+    """Loads all CONFIG_KEYS into envvars"""
 
-    if not CONFIG_FILE.is_file():
-        raise FileNotFoundError("Konfigurationsfilen blev ikke fundet.")
+    if conf_path:
+        if not conf_path.is_file():
+            raise FileNotFoundError("Konfigurationsfilen blev ikke fundet på den angivne sti.")
+
+    elif not CONFIG_FILE.is_file():
+        raise FileNotFoundError(f"Konfigurationsfilen findes ikke her: {CONFIG_FILE}.")
 
     with open(CONFIG_FILE) as c:
         try:
