@@ -109,7 +109,16 @@ def _generate_arkibas_csvs(dir_path: Path, submission: dict) -> None:
 
 
 def setup_parser() -> argparse.ArgumentParser:
-    cli = argparse.ArgumentParser()
+    cli = argparse.ArgumentParser(
+        description="""
+        Henter filer og metadata fra afleveringer foretaget gennem Smartarkivering.
+        
+        Afleveringens uuid skal angives, mens alle options (--...) defaulter til værdien i konfigurationsfilen.
+        
+        Eksempel:
+        '$ aflevering --format json --hash sha dbd9bcb8-8110-4a10-9fe7-d12d9ca9f09d'
+        """
+    )
     cli.add_argument(
         "uuid",
         metavar="UUID",
