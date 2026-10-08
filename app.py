@@ -403,6 +403,7 @@ def main() -> None:
     # --hash
     hash: str = args.hash or os.getenv(f"{ENV_PREFIX}_DEFAULT_HASH")
 
+    # --form (kaldet 'slug' i kildekoden)
     slug: str = args.form or os.getenv(f"{ENV_PREFIX}_ARCHIVE_PREFIX")
 
     # Create output-dir
