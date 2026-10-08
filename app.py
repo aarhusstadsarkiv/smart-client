@@ -20,36 +20,37 @@ import config as config
 
 ENV_PREFIX = "AFLEVERING"
 ADDITIONAL_FIELDS: list = ["navn", "email", "telefon"]
-ARKIBAS_JOURNAL_COLS: list = [
-    "JournalAar",
-    "JournalNr",
-    "ModtagetAf",
-    "ModtagetDato",
-    "Aftale",
-    "Klausul",
-    "Klausulbeskrivelse",
-    "Bemærkning",
-    "Stikord",
-    "Giver1Navn",
-    "Giver1Adresse",
-    "Giver1Postnummer",
-    "Giver1By",
-    "Giver1Telefon",
-    "Giver1Email",
-    "Giver1Bemærkninger",
-]
-ARKIBAS_CONTENT_COLS: list = [
-    "Journalnummer",
-    "Indhold",
-    "Råderet",
-    "Mængde",
-    "Placering",
-    "Note",
-    "Filnavn",
-]
 
 
-def generate_arkibas_csvs(dir_path: Path, submission: dict) -> None:
+
+def _generate_arkibas_csvs(dir_path: Path, submission: dict) -> None:
+    ARKIBAS_JOURNAL_COLS: list = [
+        "JournalAar",
+        "JournalNr",
+        "ModtagetAf",
+        "ModtagetDato",
+        "Aftale",
+        "Klausul",
+        "Klausulbeskrivelse",
+        "Bemærkning",
+        "Stikord",
+        "Giver1Navn",
+        "Giver1Adresse",
+        "Giver1Postnummer",
+        "Giver1By",
+        "Giver1Telefon",
+        "Giver1Email",
+        "Giver1Bemærkninger",
+    ]
+    ARKIBAS_CONTENT_COLS: list = [
+        "Journalnummer",
+        "Indhold",
+        "Råderet",
+        "Mængde",
+        "Placering",
+        "Note",
+        "Filnavn",
+    ]
     journal_path: Path = dir_path / "journal.csv"
     content_path: Path = dir_path / "indhold.csv"
 
@@ -228,7 +229,7 @@ def generate_submission_info(submission: dict, files: list[dict]) -> dict:
 def save_submission_info(submission: dict, format: str, out_dir: Path) -> None:
 
     if format == "arkibas":
-        generate_arkibas_csvs(out_dir, submission)
+        _generate_arkibas_csvs(out_dir, submission)
         return
 
     filepath = Path(out_dir, f"submission.{format}")
