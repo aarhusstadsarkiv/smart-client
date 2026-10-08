@@ -110,6 +110,11 @@ def default_value(field: str, value: Optional[str]) -> int:
 
 def setup_parser() -> argparse.ArgumentParser:
     cli = argparse.ArgumentParser()
+    cli.add_argument(
+        "uuid",
+        metavar="UUID",
+        help=("Unik id for afleveringen. Eks.: dbd9bcb8-8110-4a10-9fe7-d12d9ca9f09d")
+    )
 
     cli.add_argument(
         "--config",
@@ -140,12 +145,6 @@ def setup_parser() -> argparse.ArgumentParser:
         "--hash",
         action="store_true",
         help="Checksum-algoritme of downloaded files"
-    )
-
-    cli.add_argument(
-        "uuid",
-        metavar="UUID",
-        help=("Unik id for afleveringen. Eks.: dbd9bcb8-8110-4a10-9fe7-d12d9ca9f09d")
     )
 
     args = cli.parse_args()
