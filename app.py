@@ -156,6 +156,11 @@ Eksempel:
         help="Checksum-algoritme til validering af filer"
     )
 
+    cli.add_argument(
+        "--form",
+        choices=['aar', 'aal', 'kol', 'ran', 'mgp'],
+        help="Hvilken formular skal hentes ('aar', 'mgp',...)"
+    )
     args = cli.parse_args()
     return args
 
@@ -396,6 +401,8 @@ def main() -> None:
 
     # --hash
     hash: str = args.hash or os.getenv(f"{ENV_PREFIX}_DEFAULT_HASH")
+
+    form: str = args.form or os.getenv(f"{ENV_PREFIX}_ARCHIVE_PREFIX")
 
     # Create output-dir
     out_dir = Path(destination, args.uuid)
