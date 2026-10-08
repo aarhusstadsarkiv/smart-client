@@ -186,9 +186,10 @@ def get_submission_info(uuid: str) -> dict:
 
     with httpx.Client() as client:
         print(f"Henter afleveringsformular med uuid: {uuid}", flush=True)
-        r = client.get(
-            f"{os.getenv('SUBMISSION_URL')}/{uuid}?api-key={os.getenv('API_KEY')}"
-        )
+        url = os.getenv(f"{ENV_PREFIX}_SUBMISSION_URL")
+        api_key = os.getenv(f"{ENV_PREFIX}_API_KEY")
+        r = client.get(f"{url}/{uuid}?api-key={api_key}")
+
         if r.status_code == 404:
             raise HTTPException(
                 f"FEJl. Der findes ingen aflevering med dette uuid: {uuid}"
@@ -225,7 +226,7 @@ def get_fileinfo(submission: dict) -> list[dict]:
 
 def generate_submission_info(submission: dict, files: list[dict]) -> dict:
     out: dict = {}
-    prefix: str = os.getenv("ARCHIVE_PREFIX", "").lower()
+    prefix: str = os.getenv(f"{ENV_PREFIX}_ARCHIVE_PREFIX", "").lower()
     if submission["data"].get("mgp_navn") is not None:
         prefix = "mgp"
     for k, v in submission["data"].items():
@@ -308,7 +309,7 @@ def download_files(files: list[dict], out_dir: Path) -> list[dict]:
                 files_out.append(file)
                 continue
 
-            r = client.get(d["url"], params={"api-key": os.getenv("API_KEY")})
+            r = client.get(d["url"], params={"api-key": os.getenv(f"{ENV_PREFIX}_API_KEY")})
 
             if r.status_code == 404:
                 print(
