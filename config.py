@@ -17,14 +17,19 @@ REQUIRED_CONFIG_KEYS = [
 def load_configuration(conf_path: Path = None) -> None:
     """Loads all CONFIG_KEYS into envvars"""
 
+    default_file: Path = Path.home() / ".smartarkivering" / "config.json"
+    conf_file: Path
+
     if conf_path:
         if not conf_path.is_file():
-            raise FileNotFoundError("Konfigurationsfilen blev ikke fundet på den angivne sti.")
+            raise FileNotFoundError(f"Konfigurationsfilen findes ikke her: {conf_path}.")
+        conf_file = conf_path
+    elif not default_file.is_file():
+        raise FileNotFoundError(f"Konfigurationsfilen findes ikke her: {default_file}.")
+    else:
+        conf_file = default_file
 
-    elif not CONFIG_FILE.is_file():
-        raise FileNotFoundError(f"Konfigurationsfilen findes ikke her: {CONFIG_FILE}.")
-
-    with open(CONFIG_FILE) as c:
+    with open(conf_file) as c:
         try:
             config: dict = json.load(c)
         except ValueError as e:
