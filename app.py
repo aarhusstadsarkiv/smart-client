@@ -224,15 +224,15 @@ def get_fileinfo(submission: dict) -> list[dict]:
     return files
 
 
-def generate_submission_info(submission: dict, files: list[dict]) -> dict:
+def generate_submission_info(slug: str, submission: dict, files: list[dict]) -> dict:
     out: dict = {}
-    prefix: str = os.getenv(f"{ENV_PREFIX}_ARCHIVE_PREFIX", "").lower()
-    if submission["data"].get("mgp_navn") is not None:
-        prefix = "mgp"
+    # prefix: str = os.getenv(f"{ENV_PREFIX}_ARCHIVE_PREFIX", "").lower()
+    # if submission["data"].get("mgp_navn") is not None:
+    #     prefix = "mgp"
     for k, v in submission["data"].items():
         if not v:
             continue
-        if k.startswith(prefix):
+        if k.startswith(slug):
             out[k[4:]] = v
         elif k in ADDITIONAL_FIELDS:
             if k not in submission["data"]:
@@ -403,7 +403,7 @@ def main() -> None:
     # --hash
     hash: str = args.hash or os.getenv(f"{ENV_PREFIX}_DEFAULT_HASH")
 
-    form: str = args.form or os.getenv(f"{ENV_PREFIX}_ARCHIVE_PREFIX")
+    slug: str = args.form or os.getenv(f"{ENV_PREFIX}_ARCHIVE_PREFIX")
 
     # Create output-dir
     out_dir = Path(destination, args.uuid)
