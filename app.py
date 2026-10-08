@@ -108,7 +108,7 @@ def _generate_arkibas_csvs(dir_path: Path, submission: dict) -> None:
 #     return 0
 
 
-def setup_parser() -> argparse.ArgumentParser:
+def setup_parser()-> argparse.ArgumentParser:
     cli = argparse.ArgumentParser(
         description="""
 Henter filer og metadata fra afleveringer foretaget gennem Smartarkivering.
@@ -120,6 +120,8 @@ Eksempel:
         """,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
+
+    # cli = argparse.ArgumentParser()
     cli.add_argument(
         "uuid",
         metavar="UUID",
@@ -161,8 +163,8 @@ Eksempel:
         choices=['aar', 'aal', 'kol', 'ran', 'mgp'],
         help="Hvilken formular skal hentes ('aar', 'mgp',...)"
     )
-    args = cli.parse_args()
-    return args
+
+    return cli
 
 
 def get_submission_info(uuid: str) -> dict:
