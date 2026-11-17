@@ -140,7 +140,7 @@ Eksempel:
 
     cli.add_argument(
         "--hash",
-        choices=['md5', 'sha256 '],
+        choices=['md5', 'sha256'],
         help="Checksum-algoritme til validering af filer"
     )
 
