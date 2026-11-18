@@ -2,7 +2,7 @@ import os
 import json
 from pathlib import Path
 
-CONFIG_FILE = Path.home() / ".smartarkivering" / "config.json"
+# CONFIG_FILE = Path.home() / ".smartarkivering" / "config.json"
 
 REQUIRED_CONFIG_KEYS = [
     "api_key",
@@ -14,15 +14,22 @@ REQUIRED_CONFIG_KEYS = [
 ]
 
 
-def load_configuration() -> None:
-    """Loads all required CONFIG_KEYS if found in {Home}/.smartarkivering/config.json
-    into envvars
-    """
+def load_configuration(conf_path: Path = None) -> None:
+    """Loads all CONFIG_KEYS into envvars"""
 
-    if not CONFIG_FILE.is_file():
-        raise FileNotFoundError("Konfigurationsfilen blev ikke fundet.")
+    default_file: Path = Path.home() / ".smartarkivering" / "config.json"
+    conf_file: Path
 
-    with open(CONFIG_FILE) as c:
+    if conf_path:
+        if not conf_path.is_file():
+            raise FileNotFoundError(f"Konfigurationsfilen findes ikke her: {conf_path}.")
+        conf_file = conf_path
+    elif not default_file.is_file():
+        raise FileNotFoundError(f"Konfigurationsfilen findes ikke her: {default_file}.")
+    else:
+        conf_file = default_file
+
+    with open(conf_file) as c:
         try:
             config: dict = json.load(c)
         except ValueError as e:
@@ -33,7 +40,7 @@ def load_configuration() -> None:
                 raise ValueError(
                     f"FEJL. Mangler følgende påkrævede konfigurationsnøgle: {key}"
                 )
-            os.environ[key.upper()] = config[key]
+            os.environ["AFLEVERING_" + key.upper()] = config[key]
 
             # for k, v in config.items():
             #     if k.lower() in REQUIRED_CONFIG_KEYS:
