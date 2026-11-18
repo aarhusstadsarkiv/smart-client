@@ -3,6 +3,8 @@
 ### CLI klient
 Alle versioner fra 0.3.x er cli-only. Disse versioner findes dog kun på `cli-only`-branchen.
 
+Run this to compile: `uv run pyinstaller --onefile --clean --name aflevering .\src\smart_client\app.py`
+
 ### GUI klient
 En lille Gooey-baseret klient til hentning af afleveringer og tilhørende filer via Smartarkivering.dk's API.
 
